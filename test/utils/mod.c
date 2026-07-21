@@ -1,10 +1,8 @@
 #include <wetman/utils/test/macro.h>
 
-#include "ut_str.c"
+#include "data_struct/mod.c"
 
 void registerUtilTests(void)
 {
-    REGISTER_TEST(StrTest_EqCStr);
-    REGISTER_TEST(StrTest_EqStr);
-    REGISTER_TEST(StrTest_FromCStr);
+    registerUtilDataStructTests();
 }
