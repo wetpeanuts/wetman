@@ -78,17 +78,28 @@ TEST(StrTest_EqStr)
     }
 }
 
-TEST(StrTest_FromCStr_EmptyStr)
+TEST(StrTest_FromCStr)
 {
-    Str str = Str_FromCStr("");
-    
-    EXPECT_EQ(str.len, 0);
-}
+    typedef struct {
+        const char* cStr;
+        uint32_t len;
+    } TestData;
 
-TEST(StrTest_FromCStr_NonEmptyStr)
-{
-    Str str = Str_FromCStr("test");
+    TestData testData[] = {
+        {
+            .cStr = "",
+            .len = 0,
+        },
+        {
+            .cStr = "test",
+            .len = 4,
+        },
+    };
     
-    EXPECT_EQ(str.len, 4);
+    size_t len = sizeof(testData) / sizeof(testData[0]);
+    for (size_t i = 0; i < len; ++i) {
+        Str str = Str_FromCStr(testData[i].cStr);
+        EXPECT_EQ(str.len, testData[i].len);
+    }
 }
 

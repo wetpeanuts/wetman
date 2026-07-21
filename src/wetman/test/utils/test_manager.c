@@ -28,7 +28,8 @@ void TestManager_RunTests(void)
         const uint32_t testCount = __globalTestManager.testCount;
         const char* testName = __globalTestManager.testNames[i];
 
-        printf("[RUNNING %d/%d] %s\n", i + 1, testCount, testName);
+        // TODO: align test name column
+        printf("[RUNNING: %d/%d] %s\n", i + 1, testCount, testName);
 
         __globalTestManager.testRunCount++;
         TestCaseStat testCaseStat = {
@@ -40,7 +41,7 @@ void TestManager_RunTests(void)
             __globalTestManager.failedTestCount++;
         }
 
-        printf("[...DONE] %s: %s\n", testName, result);
+        printf("[...DONE: %s] %s\n", result, testName);
     }
 
     const uint32_t testCount = __globalTestManager.testCount;
@@ -53,11 +54,11 @@ void TestManager_RunTests(void)
     const char* result = resultLabel(!skippedTestCount && !failedTestCount);
 
     printf("========\n");
-    printf("[RESULT] %s\n", result);
+    printf("[RESULT: %s]\n", result);
     printf("========\n");
-    printf("TESTS SUCCEED: \033[32m%d/%d\033[0m\n", successTestCount, testCount);
-    printf("TESTS SKIPPED: \033[31m%d/%d\033[0m\n", skippedTestCount, testCount);
-    printf("TESTS FAILED:  \033[31m%d/%d\033[0m\n", failedTestCount, testCount);
+    printf("[SUCCEED: \033[32m%d/%d\033[0m]\n", successTestCount, testCount);
+    printf("[SKIPPED: \033[31m%d/%d\033[0m]\n", skippedTestCount, testCount);
+    printf("[FAILED:  \033[31m%d/%d\033[0m]\n", failedTestCount, testCount);
 }
 
 TestManager __globalTestManager = {

@@ -2,7 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 Str Str_FromCStr(const char* cStr)
 {
