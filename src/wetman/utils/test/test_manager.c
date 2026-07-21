@@ -1,5 +1,7 @@
 #include <wetman/utils/test/test_manager.h>
 
+#include <wetman/utils/time.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,8 +26,10 @@ void TestManager_RegisterTest(void(*test)(TestCaseStat*), const char* testName)
 
 void TestManager_RunTests(void)
 {
-    char buf[256];
-    const size_t bufLen = sizeof(buf);
+    char statusBuf[256];
+    const size_t statusBufLen = sizeof(statusBuf);
+    char timeBuf[32];
+    const size_t timeBufLen = sizeof(timeBuf);
     const int prefixlen = 24;
     const char* gap = "........................";
 
@@ -33,22 +37,34 @@ void TestManager_RunTests(void)
         const uint32_t testCount = __globalTestManager.testCount;
         const char* testName = __globalTestManager.testNames[i];
 
-        int actualPrefixLen = snprintf(buf, bufLen, "[RUNNING: %d/%d]", i + 1, testCount);
-        printf("%s%.*s%s\n", buf, prefixlen - actualPrefixLen, gap, testName);
+        int actualPrefixLen = snprintf(statusBuf, statusBufLen, "[RUNNING: %d/%d]", i + 1, testCount);
+        printf("%s%.*s%s\n", statusBuf, prefixlen - actualPrefixLen, gap, testName);
 
         __globalTestManager.testRunCount++;
         TestCaseStat testCaseStat = {
             .failureCount = 0,
         };
+
+        const long long tsBegin = currentTimestampMs();
         __globalTestManager.tests[i](&testCaseStat);
+        const long long tsEnd = currentTimestampMs();
+
+        const long long totalTime = tsEnd - tsBegin;
+        if (totalTime > 1000) {
+            snprintf(timeBuf, timeBufLen, "%llds", totalTime / 1000);
+        } else {
+            snprintf(timeBuf, timeBufLen, "%lldms", totalTime);
+        }
+
         const char* result = resultLabel(!testCaseStat.failureCount);
         if (testCaseStat.failureCount) {
             __globalTestManager.failedTestCount++;
         }
 
-        actualPrefixLen = snprintf(buf, bufLen, "[...DONE: %s]", result);
+        actualPrefixLen = snprintf(statusBuf, statusBufLen, "[...DONE: %s]", result);
         // Correct gap width +9 because of color formatting
-        printf("%s%.*s%s\n", buf, prefixlen - actualPrefixLen + 9, gap, testName);
+        printf("%s%.*s%s %s\n",
+                statusBuf, prefixlen - actualPrefixLen + 9, gap, testName, timeBuf);
     }
 
     const uint32_t testCount = __globalTestManager.testCount;

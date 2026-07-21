@@ -4,4 +4,6 @@
 #include <wetman/utils/data_struct/mod.c>
 #include <wetman/utils/test/mod.c>
 
+#include <wetman/utils/time.c>
+
 #endif // WETMAN_UTILS_MOD_C 
