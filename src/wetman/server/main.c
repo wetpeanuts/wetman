@@ -3,7 +3,7 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-#include <wetman/server/mod.h>
+#include <wetman/server/mod.c>
 
 
 int main(void) {

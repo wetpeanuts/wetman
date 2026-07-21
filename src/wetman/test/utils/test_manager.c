@@ -14,52 +14,53 @@ const char* resultLabel(int success)
 
 void TestManager_RegisterTest(void(*test)(TestCaseStat*), const char* testName)
 {
-    if (globalTestManager.testCount >= MAX_TEST_COUNT) {
+    if (__globalTestManager.testCount >= MAX_TEST_COUNT) {
         printf("Error: max test count (%d) exceeded. Consider updaing max test count.", MAX_TEST_COUNT);
         exit(EXIT_FAILURE);
     }
-    globalTestManager.tests[globalTestManager.testCount] = test;
-    globalTestManager.testNames[globalTestManager.testCount++] = testName;
+    __globalTestManager.tests[__globalTestManager.testCount] = test;
+    __globalTestManager.testNames[__globalTestManager.testCount++] = testName;
 }
 
 void TestManager_RunTests(void)
 {
-    for (uint32_t i = 0; i < globalTestManager.testCount; ++i) {
-        const uint32_t testCount = globalTestManager.testCount;
-        const char* testName = globalTestManager.testNames[i];
+    for (uint32_t i = 0; i < __globalTestManager.testCount; ++i) {
+        const uint32_t testCount = __globalTestManager.testCount;
+        const char* testName = __globalTestManager.testNames[i];
 
-        printf("[RUNNING %d/%d] %s\n", i, testCount, testName);
+        printf("[RUNNING %d/%d] %s\n", i + 1, testCount, testName);
 
-        globalTestManager.testRunCount++;
+        __globalTestManager.testRunCount++;
         TestCaseStat testCaseStat = {
-            .failedAssertCount = 0,
-            .failedExpectCount = 0,
+            .failureCount = 0,
         };
-        globalTestManager.tests[i](&testCaseStat);
-        const char* result = resultLabel(
-                !testCaseStat.failedExpectCount && !testCaseStat.failedAssertCount);
+        __globalTestManager.tests[i](&testCaseStat);
+        const char* result = resultLabel(!testCaseStat.failureCount);
+        if (testCaseStat.failureCount) {
+            __globalTestManager.failedTestCount++;
+        }
 
-        printf("[DONE] %s: %s\n", testName, result);
+        printf("[...DONE] %s: %s\n", testName, result);
     }
 
-    const uint32_t successTestCount =
-        globalTestManager.testRunCount - globalTestManager.failedTestCount;
-    const uint32_t skippedTestCount =
-        globalTestManager.testCount - globalTestManager.testRunCount;
-    const uint32_t failedTestCount = globalTestManager.failedTestCount;
+    const uint32_t testCount = __globalTestManager.testCount;
+    const uint32_t testRunCount = __globalTestManager.testRunCount;
+    const uint32_t failedTestCount = __globalTestManager.failedTestCount;
+
+    const uint32_t successTestCount = testRunCount - failedTestCount;
+    const uint32_t skippedTestCount = testCount - testRunCount;
 
     const char* result = resultLabel(!skippedTestCount && !failedTestCount);
 
-    printf("=======\n");
+    printf("========\n");
     printf("[RESULT] %s\n", result);
-    printf("=======\n");
-    printf("TESTS RUN: %d\n", globalTestManager.testRunCount);
-    printf("TESTS SKIPPED: %d\n", skippedTestCount);
-    printf("TESTS SUCCEED: %d\n", successTestCount);
-    printf("TESTS FAILED: %d\n", globalTestManager.failedTestCount);
+    printf("========\n");
+    printf("TESTS SUCCEED: \033[32m%d/%d\033[0m\n", successTestCount, testCount);
+    printf("TESTS SKIPPED: \033[31m%d/%d\033[0m\n", skippedTestCount, testCount);
+    printf("TESTS FAILED:  \033[31m%d/%d\033[0m\n", failedTestCount, testCount);
 }
 
-TestManager globalTestManager = {
+TestManager __globalTestManager = {
     .testCount = 0,
     .testRunCount = 0,
     .failedTestCount = 0,

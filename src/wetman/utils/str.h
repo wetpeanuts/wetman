@@ -7,8 +7,10 @@
 typedef struct {
     const char* data;
     uint32_t len;
-} StrSlice;
+} Str;
 
-StrSlice StrSlice_FromCStr(const char* str);
+Str Str_FromCStr(const char* str);
+int Str_EqStr(Str s1, Str s2);
+int Str_EqCStr(Str s1, const char*);
 
 #endif // WETMAN_UTILS_STR_H

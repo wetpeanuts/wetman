@@ -7,8 +7,7 @@
 #define MAX_TEST_COUNT 1024
 
 typedef struct {
-    uint32_t failedExpectCount;
-    uint32_t failedAssertCount;
+    uint32_t failureCount;
 } TestCaseStat;
 
 typedef struct {
@@ -22,6 +21,6 @@ typedef struct {
 void TestManager_RegisterTest(void(*test)(TestCaseStat*), const char* testName);
 void TestManager_RunTests(void);
 
-extern TestManager globalTestManager;
+extern TestManager __globalTestManager;
 
 #endif // WETMAN_TEST_UTILS_TEST_MANAGER_H 

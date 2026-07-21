@@ -1,16 +1,12 @@
-#include <wetman/test/mod.c>
 #include <wetman/test/utils/macro.h>
 
-
-TEST(DummyTest)
-{
-    printf("Running some test\n");
-}
+#include <wetman/test/mod.c>
+#include "utils/mod.c"
 
 
 int main(void)
 {
-    REGISTER_TEST(DummyTest);
+    registerUtilTests();
 
     RUN_TESTS();
 }
