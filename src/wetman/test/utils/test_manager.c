@@ -6,7 +6,7 @@
 const char* resultLabel(int success)
 {
     if (success) {
-        return "\033[32mSUCCESS\033[0m";
+        return "\033[32mPASSED\033[0m";
     } else {
         return "\033[31mFAILED\033[0m";
     }
@@ -24,12 +24,17 @@ void TestManager_RegisterTest(void(*test)(TestCaseStat*), const char* testName)
 
 void TestManager_RunTests(void)
 {
+    char buf[256];
+    const size_t bufLen = sizeof(buf);
+    const int prefixlen = 24;
+    const char* gap = "........................";
+
     for (uint32_t i = 0; i < __globalTestManager.testCount; ++i) {
         const uint32_t testCount = __globalTestManager.testCount;
         const char* testName = __globalTestManager.testNames[i];
 
-        // TODO: align test name column
-        printf("[RUNNING: %d/%d] %s\n", i + 1, testCount, testName);
+        int actualPrefixLen = snprintf(buf, bufLen, "[RUNNING: %d/%d]", i + 1, testCount);
+        printf("%s%.*s%s\n", buf, prefixlen - actualPrefixLen, gap, testName);
 
         __globalTestManager.testRunCount++;
         TestCaseStat testCaseStat = {
@@ -41,7 +46,9 @@ void TestManager_RunTests(void)
             __globalTestManager.failedTestCount++;
         }
 
-        printf("[...DONE: %s] %s\n", result, testName);
+        actualPrefixLen = snprintf(buf, bufLen, "[...DONE: %s]", result);
+        // Correct gap width +9 because of color formatting
+        printf("%s%.*s%s\n", buf, prefixlen - actualPrefixLen + 9, gap, testName);
     }
 
     const uint32_t testCount = __globalTestManager.testCount;
@@ -53,10 +60,10 @@ void TestManager_RunTests(void)
 
     const char* result = resultLabel(!skippedTestCount && !failedTestCount);
 
-    printf("========\n");
-    printf("[RESULT: %s]\n", result);
-    printf("========\n");
-    printf("[SUCCEED: \033[32m%d/%d\033[0m]\n", successTestCount, testCount);
+    printf("=================\n");
+    printf("[RESULT:  %s]\n", result);
+    printf("=================\n");
+    printf("[PASSED:  \033[32m%d/%d\033[0m]\n", successTestCount, testCount);
     printf("[SKIPPED: \033[31m%d/%d\033[0m]\n", skippedTestCount, testCount);
     printf("[FAILED:  \033[31m%d/%d\033[0m]\n", failedTestCount, testCount);
 }
