@@ -1,7 +1,5 @@
 #include <wetman/utils/str.h>
-#include <wetman/test/utils/macro.h>
-
-#include <wetman/utils/mod.c>
+#include <wetman/utils/test/macro.h>
 
 
 TEST(StrTest_EqCStr)

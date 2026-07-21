@@ -1,6 +1,6 @@
-#include <wetman/test/utils/macro.h>
+#include <wetman/utils/test/macro.h>
 
-#include <wetman/test/mod.c>
+#include <wetman/utils/mod.c>
 #include "utils/mod.c"
 
 

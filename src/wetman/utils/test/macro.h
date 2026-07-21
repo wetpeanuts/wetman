@@ -1,7 +1,7 @@
 #ifndef WETMAN_TEST_UTILS_MACRO_H
 #define WETMAN_TEST_UTILS_MACRO_H
 
-#include <wetman/test/utils/test_manager.h>
+#include <wetman/utils/test/test_manager.h>
 
 #include <stdio.h>
 

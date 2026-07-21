@@ -1,4 +1,4 @@
-#include <wetman/test/utils/macro.h>
+#include <wetman/utils/test/macro.h>
 
 #include "ut_str.c"
 
