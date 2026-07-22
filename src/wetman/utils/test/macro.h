@@ -1,12 +1,11 @@
 #ifndef WETMAN_TEST_UTILS_MACRO_H
 #define WETMAN_TEST_UTILS_MACRO_H
 
+#include <wetman/utils/macro.h>
 #include <wetman/utils/test/test_manager.h>
 
 #include <stdio.h>
 
-
-#define MAYBE_UNUSED __attribute__((unused))
 
 #define TEST(test) void test(TestCaseStat* __testCaseStat MAYBE_UNUSED)
 
@@ -14,12 +13,21 @@
 
 #define RUN_TESTS() TestManager_RunTests()
 
-#define EXPECT_EQ(expected, actual) \
+#define EXPECT_EQ(actual, expected) \
     do { \
         if ((expected) != (actual)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
-            printf("  Expected: %d (%s)\n", (expected), (#expected)); \
-            printf("  Actual:   %d (%s)\n", (actual), (#actual)); \
+            printf("  Expected: %lld (%s)\n", (long long)(expected), (#expected)); \
+            printf("  Actual:   %lld (%s)\n", (long long)(actual), (#actual)); \
+            __testCaseStat->failureCount++; \
+        } \
+    } while (0)
+
+#define EXPECT_NE(actual, expected) \
+    do { \
+        if ((expected) == (actual)) { \
+            printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
+            printf("  Expected: %s != %s (%lld)\n", (#actual), (#expected), (long long)(actual)); \
             __testCaseStat->failureCount++; \
         } \
     } while (0)
@@ -33,15 +41,25 @@
         } \
     } while (0)
 
-#define ASSERT_EQ(expected, actual) \
+#define ASSERT_EQ(actual, expected) \
     do { \
         if ((expected) != (actual)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
-            printf("  Expected: %d (%s)\n", (expected), (#expected)); \
-            printf("  Actual:   %d (%s)\n", (actual), (#actual)); \
+            printf("  Expected: %lld (%s)\n", (long long)(expected), (#expected)); \
+            printf("  Actual:   %lld (%s)\n", (long long)(actual), (#actual)); \
             __testCaseStat->failureCount++; \
             return; \
-        }                                            \
+        } \
+    } while (0)
+
+#define ASSERT_NE(actual, expected) \
+    do { \
+        if ((expected) == (actual)) { \
+            printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
+            printf("  Expected: %s != %s (%lld)\n", (#actual), (#expected), (long long)(actual)); \
+            __testCaseStat->failureCount++; \
+            return; \
+        } \
     } while (0)
 
 #define ASSERT(condition) \
