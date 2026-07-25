@@ -4,8 +4,8 @@
 
 void registerUtilMemTests(void)
 {
-    REGISTER_TEST(ArenaTest_New);
+    REGISTER_TEST(ArenaTest_NewFree);
+    REGISTER_TEST(ArenaTest_NewReset);
     REGISTER_TEST(ArenaTest_Alloc);
-    REGISTER_TEST(ArenaTest_Reset);
-    REGISTER_TEST(ArenaTest_Free);
+    REGISTER_TEST(ArenaTest_CanAllocOnSamePage);
 }

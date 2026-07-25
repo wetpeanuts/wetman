@@ -2,68 +2,95 @@
 #include <wetman/utils/test/macro.h>
 
 
-TEST(ArenaTest_New)
+TEST(ArenaTest_NewFree)
 {
     Arena arena = Arena_New();
-    EXPECT_NE(arena.data, NULL);
-    EXPECT_EQ(arena.size, 0);
-    EXPECT_EQ(arena.capacity, 4096);
+    Arena_Free(&arena);
+}
+
+TEST(ArenaTest_NewReset)
+{
+    Arena arena = Arena_New();
+
+    // First allocation
+    void* data = Arena_Alloc(&arena, 1024);
+    ASSERT_NE(data, NULL);
+
+    Arena_Reset(&arena);
+
+    // Memory reused
+    void* dataSameMem = Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataSameMem, NULL);
+    EXPECT_EQ(data, dataSameMem);
+
+    Arena_Free(&arena);
 }
 
 TEST(ArenaTest_Alloc)
 {
     Arena arena = Arena_New();
-    void* arenaDataPtr = arena.data;
-    ASSERT_NE(arenaDataPtr, NULL);
 
-    void* memPtr = Arena_Alloc(&arena, 1024);
-    EXPECT_EQ(arena.data, arenaDataPtr);
-    EXPECT_EQ(arena.size, 1024);
-    EXPECT_EQ(arena.capacity, 4096);
-    EXPECT_EQ(memPtr, arena.data);
+    // First allocation
+    void* data = Arena_Alloc(&arena, 1024);
+    ASSERT_NE(data, NULL);
 
-    memPtr = Arena_Alloc(&arena, 2048);
-    EXPECT_EQ(arena.data, arenaDataPtr);
-    EXPECT_EQ(arena.size, 3072);
-    EXPECT_EQ(arena.capacity, 4096);
-    EXPECT_EQ(memPtr, arena.data + 1024);
+    // Allocate on the same page
+    void* dataSamePage = Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataSamePage, NULL);
+    EXPECT_EQ(data + 1024, dataSamePage);
 
-    memPtr = Arena_Alloc(&arena, 2048);
-    // Might realloc
-    arenaDataPtr = arena.data;
-    EXPECT_EQ(arena.size, 5120);
-    EXPECT_EQ(arena.capacity, 8192);
-    EXPECT_EQ(memPtr, arena.data + 3072);
+    // Not enough space on the same page, allocate on a new page
+    void* dataDiffPage = Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataDiffPage, NULL);
+    ASSERT_NE(dataSamePage + 2048, dataDiffPage);
 
-    memPtr = Arena_Alloc(&arena, 3072);
-    EXPECT_EQ(arena.data, arenaDataPtr);
-    EXPECT_EQ(arena.size, 8192);
-    EXPECT_EQ(arena.capacity, 8192);
-    EXPECT_EQ(memPtr, arena.data + 5120);
-}
+    // Data chunk larger than defaul page size
+    // Always takes a new page of requested size
+    void* dataLarge = Arena_Alloc(&arena, 5120);
+    ASSERT_NE(dataLarge, NULL);
+    ASSERT_NE(dataDiffPage + 2048, dataLarge);
 
-TEST(ArenaTest_Reset)
-{
-    Arena arena = Arena_New();
-    void* arenaDataPtr = arena.data;
-    Arena_Alloc(&arena, 1024);
-    ASSERT_NE(arenaDataPtr, NULL);
-    ASSERT_EQ(arena.size, 1024);
-    ASSERT_EQ(arena.capacity, 4096);
-
-    Arena_Reset(&arena);
-    EXPECT_EQ(arena.data, arenaDataPtr);
-    EXPECT_EQ(arena.size, 0);
-    EXPECT_EQ(arena.capacity, 4096);
-}
-
-TEST(ArenaTest_Free)
-{
-    Arena arena = Arena_New();
-    ASSERT_NE(arena.data, NULL);
+    // Next allocation on a new page
+    void* dataAfterLarge = Arena_Alloc(&arena, 1024);
+    ASSERT_NE(dataAfterLarge, NULL);
+    ASSERT_NE(dataLarge + 5120, dataAfterLarge);
 
     Arena_Free(&arena);
-    EXPECT_EQ(arena.data, NULL);
-    EXPECT_EQ(arena.size, 0);
-    EXPECT_EQ(arena.capacity, 0);
 }
+
+TEST(ArenaTest_CanAllocOnSamePage)
+{
+    Arena arena = Arena_New();
+
+    EXPECT_NE(Arena_CanAllocOnSamePage(&arena, 1024), NULL);
+    EXPECT_NE(Arena_CanAllocOnSamePage(&arena, 4096), NULL);
+    EXPECT_EQ(Arena_CanAllocOnSamePage(&arena, 5120), NULL);
+
+    // First allocation
+    void* data = Arena_Alloc(&arena, 1024);
+    ASSERT_NE(data, NULL);
+
+    // Allocate on the same page
+    void* dataSamePage = Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataSamePage, NULL);
+    EXPECT_EQ(data + 1024, dataSamePage);
+
+    // Not enough space on the same page, allocate on a new page
+    void* dataDiffPage = Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataDiffPage, NULL);
+    ASSERT_NE(dataSamePage + 2048, dataDiffPage);
+
+    // Data chunk larger than defaul page size
+    // Always takes a new page of requested size
+    void* dataLarge = Arena_Alloc(&arena, 5120);
+    ASSERT_NE(dataLarge, NULL);
+    ASSERT_NE(dataDiffPage + 2048, dataLarge);
+
+    // Next allocation on a new page
+    void* dataAfterLarge = Arena_Alloc(&arena, 1024);
+    ASSERT_NE(dataAfterLarge, NULL);
+    ASSERT_NE(dataLarge + 5120, dataAfterLarge);
+
+    Arena_Free(&arena);
+}
+

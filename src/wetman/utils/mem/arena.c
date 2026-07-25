@@ -2,64 +2,100 @@
 
 #include <wetman/utils/macro.h>
 
+#include <assert.h>
 #include <stdio.h>
 
 
-static const size_t ARENA_DEFAULT_CAPACITY = 4096;
+#define __ARENA_DEFAULT_PAGE_SIZE 4096
+
+
+__ArenaPageHeader* __allocPage(size_t size)
+{
+    assert(size >= __ARENA_DEFAULT_PAGE_SIZE);
+    return (__ArenaPageHeader*)malloc(sizeof(__ArenaPageHeader) + size);
+}
+
+void* __pageData(__ArenaPageHeader* page)
+{
+    return (void*)(page + 1);
+}
+
 
 Arena Arena_New(void)
 {
-    Arena arena = {
-        .data = malloc(ARENA_DEFAULT_CAPACITY),
-        .size = 0,
-        .capacity = ARENA_DEFAULT_CAPACITY,
-    };
+    __ArenaPageHeader* headPage = __allocPage(__ARENA_DEFAULT_PAGE_SIZE);
+    assert(headPage);
 
-    if (UNLIKELY(!arena.data)) {
-        fprintf(stderr, "Error: Failed to allocate arena");
-    }
+    headPage->__size = 0;
+    headPage->__prevPage = NULL;
+
+    Arena arena = {
+        .__headPage = headPage,
+    };
 
     return arena;
 }
 
 void* Arena_Alloc(Arena* arena, size_t size)
 {
-    if (UNLIKELY(!arena->data)) {
-        fprintf(stderr, "Error: Attempt to allocate on invalid arena");
-        return NULL;
+    __ArenaPageHeader* headPage = arena->__headPage;
+    assert(headPage);
+
+    const size_t newSize = headPage->__size + size;
+    // TODO: compare with capacity
+    if (newSize <= __ARENA_DEFAULT_PAGE_SIZE) {
+        void* data = __pageData(headPage) + headPage->__size;
+        headPage->__size = newSize;
+        return data;
     }
 
-    const size_t newSize = arena->size + size;
-    if (newSize <= arena->capacity) {
-        void* memPtr = arena->data + arena->size;
-        arena->size = newSize;
-        return memPtr;
+    __ArenaPageHeader* newHeadPage = __allocPage(MAX(__ARENA_DEFAULT_PAGE_SIZE, size));
+    assert(newHeadPage);
+
+    newHeadPage->__size = 0;
+    newHeadPage->__prevPage = headPage;
+
+
+    void* data = __pageData(newHeadPage);
+    newHeadPage->__size = size;
+    return data;
+}
+
+void* Arena_CanAllocOnSamePage(Arena* arena, size_t size)
+{
+    __ArenaPageHeader* headPage = arena->__headPage;
+    assert(headPage);
+
+    // TODO: compare with capacity
+    if (headPage->__size + size <= __ARENA_DEFAULT_PAGE_SIZE) {
+        return __pageData(headPage) + headPage->__size;
     }
 
-    arena->capacity = ARENA_DEFAULT_CAPACITY * ((newSize / ARENA_DEFAULT_CAPACITY) + 1);
-
-    void* newData = realloc(arena->data, newSize);
-    if (UNLIKELY(!newData)) {
-        fprintf(stderr, "Error: Failed to reallocate arena");
-        Arena_Free(arena);
-        return NULL;
-    }
-
-    arena->data = newData;
-    void* memPtr = newData + arena->size;
-    arena->size = newSize;
-    return memPtr;
+    return NULL;
 }
 
 void Arena_Reset(Arena* arena)
 {
-    arena->size = 0;
+    assert(arena->__headPage);
+
+    // Clean all pages except the first one
+    __ArenaPageHeader* currPage = arena->__headPage;
+    while (currPage->__prevPage) {
+        __ArenaPageHeader* pageToDelete = currPage;
+        currPage = currPage->__prevPage;
+        free(pageToDelete);
+    }
+
+    currPage->__size = 0;
+    arena->__headPage = currPage;
 }
 
 void Arena_Free(Arena* arena)
 {
-    free(arena->data);
-    arena->data = NULL;
-    arena->size = 0;
-    arena->capacity = 0;
+    // Clean all pages except the first one
+    Arena_Reset(arena);
+
+    // Clean the last page, nullify head ptr
+    free(arena->__headPage);
+    arena->__headPage = NULL;
 }
