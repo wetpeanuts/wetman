@@ -11,8 +11,15 @@
 
 __ArenaPageHeader* __allocPage(size_t size)
 {
-    assert(size >= __ARENA_DEFAULT_PAGE_SIZE);
-    return (__ArenaPageHeader*)malloc(sizeof(__ArenaPageHeader) + size);
+    assert(size > 0);
+
+    __ArenaPageHeader* page = (__ArenaPageHeader*)malloc(sizeof(__ArenaPageHeader) + size);
+    assert(page);
+
+    page->__size = 0;
+    page->__prevPage = NULL;
+
+    return page;
 }
 
 void* __pageData(__ArenaPageHeader* page)
@@ -24,10 +31,6 @@ void* __pageData(__ArenaPageHeader* page)
 Arena Arena_New(void)
 {
     __ArenaPageHeader* headPage = __allocPage(__ARENA_DEFAULT_PAGE_SIZE);
-    assert(headPage);
-
-    headPage->__size = 0;
-    headPage->__prevPage = NULL;
 
     Arena arena = {
         .__headPage = headPage,
@@ -50,11 +53,6 @@ void* Arena_Alloc(Arena* arena, size_t size)
     }
 
     __ArenaPageHeader* newHeadPage = __allocPage(MAX(__ARENA_DEFAULT_PAGE_SIZE, size));
-    assert(newHeadPage);
-
-    newHeadPage->__size = 0;
-    newHeadPage->__prevPage = headPage;
-
 
     void* data = __pageData(newHeadPage);
     newHeadPage->__size = size;

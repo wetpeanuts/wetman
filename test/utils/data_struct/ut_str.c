@@ -101,3 +101,49 @@ TEST(StrTest_FromCStr)
     }
 }
 
+TEST(StrTest_Concat)
+{
+    typedef struct {
+        const char* s1;
+        const char* s2;
+        const char* expected;
+    } TestData;
+
+    TestData testData[] = {
+        {
+            .s1 = "",
+            .s2 = "",
+            .expected = "",
+        },
+        {
+            .s1 = "Hello",
+            .s2 = "",
+            .expected = "Hello",
+        },
+        {
+            .s1 = "",
+            .s2 = "World",
+            .expected = "World",
+        },
+        {
+            .s1 = "Hello",
+            .s2 = "World",
+            .expected = "HelloWorld",
+        },
+    };
+
+    // TODO: allow customizing arena page and test allocation on different pages
+    Arena arena = Arena_New();
+
+    size_t len = sizeof(testData) / sizeof(testData[0]);
+    for (size_t i = 0; i < len; ++i) {
+        Str str1 = Str_FromCStr(testData[i].s1);
+        Str str2 = Str_FromCStr(testData[i].s2);
+        Str strExpected = Str_FromCStr(testData[i].expected);
+        EXPECT(Str_EqStr(Str_Concat(str1, str2, &arena), strExpected));
+        Arena_Reset(&arena);
+    }
+
+    Arena_Free(&arena);
+}
+
