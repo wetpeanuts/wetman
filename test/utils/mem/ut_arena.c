@@ -26,6 +26,27 @@ TEST(ArenaTest_NewReset)
     Arena_Free(&arena);
 }
 
+TEST(ArenaTest_WithPageCapacity)
+{
+    Arena arena = Arena_WithPageCapacity(1024);
+
+    ASSERT_NE(Arena_CanAllocOnSamePage(&arena, 1024), NULL);
+    ASSERT_EQ(Arena_CanAllocOnSamePage(&arena, 1025), NULL);
+
+    void* data = Arena_Alloc(&arena, 1024);
+    ASSERT_NE(data, NULL);
+
+    // Force allocation on the next page
+    // Next page should have the same capacity
+    data = Arena_Alloc(&arena, 1);
+    ASSERT_NE(data, NULL);
+
+    ASSERT_NE(Arena_CanAllocOnSamePage(&arena, 1023), NULL);
+    ASSERT_EQ(Arena_CanAllocOnSamePage(&arena, 1024), NULL);
+
+    Arena_Free(&arena);
+}
+
 TEST(ArenaTest_Alloc)
 {
     Arena arena = Arena_New();

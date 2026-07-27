@@ -6,17 +6,18 @@
 #include <stdio.h>
 
 
-#define __ARENA_DEFAULT_PAGE_SIZE 4096
+#define __ARENA_DEFAULT_PAGE_CAPACITY 4096
 
 
-__ArenaPageHeader* __allocPage(size_t size)
+__ArenaPageHeader* __allocPage(size_t capacity)
 {
-    assert(size > 0);
+    assert(capacity > 0);
 
-    __ArenaPageHeader* page = (__ArenaPageHeader*)malloc(sizeof(__ArenaPageHeader) + size);
+    __ArenaPageHeader* page = (__ArenaPageHeader*)malloc(sizeof(__ArenaPageHeader) + capacity);
     assert(page);
 
     page->__size = 0;
+    page->__capacity = capacity;
     page->__prevPage = NULL;
 
     return page;
@@ -27,13 +28,18 @@ void* __pageData(__ArenaPageHeader* page)
     return (void*)(page + 1);
 }
 
-
 Arena Arena_New(void)
 {
-    __ArenaPageHeader* headPage = __allocPage(__ARENA_DEFAULT_PAGE_SIZE);
+    return Arena_WithPageCapacity(__ARENA_DEFAULT_PAGE_CAPACITY);
+}
+
+Arena Arena_WithPageCapacity(size_t capacity)
+{
+    __ArenaPageHeader* headPage = __allocPage(capacity);
 
     Arena arena = {
         .__headPage = headPage,
+        .__tailPage = headPage,
     };
 
     return arena;
@@ -41,32 +47,32 @@ Arena Arena_New(void)
 
 void* Arena_Alloc(Arena* arena, size_t size)
 {
-    __ArenaPageHeader* headPage = arena->__headPage;
-    assert(headPage);
+    __ArenaPageHeader* tailPage = arena->__tailPage;
+    assert(tailPage);
 
-    const size_t newSize = headPage->__size + size;
-    // TODO: compare with capacity
-    if (newSize <= __ARENA_DEFAULT_PAGE_SIZE) {
-        void* data = __pageData(headPage) + headPage->__size;
-        headPage->__size = newSize;
+    const size_t newSize = tailPage->__size + size;
+    if (newSize <= tailPage->__capacity) {
+        void* data = __pageData(tailPage) + tailPage->__size;
+        tailPage->__size = newSize;
         return data;
     }
 
-    __ArenaPageHeader* newHeadPage = __allocPage(MAX(__ARENA_DEFAULT_PAGE_SIZE, size));
+    __ArenaPageHeader* newTailPage = __allocPage(MAX(arena->__headPage->__capacity, size));
 
-    void* data = __pageData(newHeadPage);
-    newHeadPage->__size = size;
+    void* data = __pageData(newTailPage);
+    newTailPage->__size = size;
+    newTailPage->__prevPage = arena->__tailPage;
+    arena->__tailPage = newTailPage;
     return data;
 }
 
 void* Arena_CanAllocOnSamePage(Arena* arena, size_t size)
 {
-    __ArenaPageHeader* headPage = arena->__headPage;
-    assert(headPage);
+    __ArenaPageHeader* tailPage = arena->__tailPage;
+    assert(tailPage);
 
-    // TODO: compare with capacity
-    if (headPage->__size + size <= __ARENA_DEFAULT_PAGE_SIZE) {
-        return __pageData(headPage) + headPage->__size;
+    if (tailPage->__size + size <= tailPage->__capacity) {
+        return __pageData(tailPage) + tailPage->__size;
     }
 
     return NULL;
@@ -74,18 +80,18 @@ void* Arena_CanAllocOnSamePage(Arena* arena, size_t size)
 
 void Arena_Reset(Arena* arena)
 {
-    assert(arena->__headPage);
+    assert(arena->__tailPage);
 
     // Clean all pages except the first one
-    __ArenaPageHeader* currPage = arena->__headPage;
-    while (currPage->__prevPage) {
-        __ArenaPageHeader* pageToDelete = currPage;
-        currPage = currPage->__prevPage;
+    __ArenaPageHeader* currTailPage = arena->__tailPage;
+    while (currTailPage->__prevPage) {
+        __ArenaPageHeader* pageToDelete = currTailPage;
+        currTailPage = currTailPage->__prevPage;
         free(pageToDelete);
     }
 
-    currPage->__size = 0;
-    arena->__headPage = currPage;
+    currTailPage->__size = 0;
+    arena->__tailPage = currTailPage;
 }
 
 void Arena_Free(Arena* arena)
@@ -96,4 +102,5 @@ void Arena_Free(Arena* arena)
     // Clean the last page, nullify head ptr
     free(arena->__headPage);
     arena->__headPage = NULL;
+    arena->__tailPage = NULL;
 }
