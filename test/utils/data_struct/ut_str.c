@@ -130,10 +130,14 @@ TEST(StrTest_Concat)
             .s2 = "World",
             .expected = "HelloWorld",
         },
+        {
+            .s1 = "Hello",
+            .s2 = "World!",
+            .expected = "HelloWorld!",
+        },
     };
 
-    // TODO: allow customizing arena page and test allocation on different pages
-    Arena arena = Arena_New();
+    Arena arena = Arena_WithPageCapacity(10);
 
     size_t len = sizeof(testData) / sizeof(testData[0]);
     for (size_t i = 0; i < len; ++i) {
