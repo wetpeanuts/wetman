@@ -2,5 +2,6 @@
 #define WETMAN_UTILS_NET_MOD_C
 
 #include <wetman/utils/net/endpoint_registry.c>
+#include <wetman/utils/net/server.c>
 
 #endif // WETMAN_UTILS_NET_MOD_C

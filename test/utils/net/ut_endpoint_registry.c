@@ -1,4 +1,5 @@
 #include <wetman/utils/net/endpoint_registry.h>
+#include <wetman/utils/net/macro.h>
 #include <wetman/utils/test/macro.h>
 
 
@@ -12,11 +13,10 @@ typedef struct {
 
 
 ReturnCode TestEndpoint(
-        void* request,
-        void* response)
+        TestEndpointRequest* request,
+        TestEndpointResponse* response)
 {
-    ((TestEndpointResponse*)response)->dummy =
-        ((TestEndpointRequest*)request)->dummy;
+    response->dummy = request->dummy;
     printf("Set dummy value: %d\n", ((TestEndpointResponse*)response)->dummy);
     return RETURN_CODE_OK;
 }
@@ -36,17 +36,10 @@ void* TestEndpointResponseFactory(Arena* arena)
     return (void*)response;
 }
 
-Endpoint TestEndpoint_Init(int endpointId)
-{
-    Endpoint endpoint = {
-        .id = endpointId,
-        .handler = TestEndpoint,
-        .requestParser = TestEndpointRequestParser,
-        .responseFactory = TestEndpointResponseFactory,
-    };
+#define TEST_ENDPOINT_ID 0
 
-    return endpoint;
-}
+DELCARE_ENDPOINT(TEST_ENDPOINT_ID, TestEndpoint)
+
 
 TEST(EndpointRegistryTest_New)
 {
@@ -64,7 +57,7 @@ TEST(EndpointRegistryTest_RegisterEndpoint)
 {
     EndpointRegistry node = EndpointRegistry_New();
 
-    Endpoint endpoint = TestEndpoint_Init(0);
+    Endpoint endpoint = TestEndpoint_Init();
     EndpointRegistry_RegisterEndpoint(&node, endpoint);
 
     EXPECT_EQ(node.__endpointCount, 1);
@@ -80,7 +73,7 @@ TEST(EndpointRegistryTest_CallEndpoint)
 {
     EndpointRegistry node = EndpointRegistry_New();
 
-    Endpoint endpoint = TestEndpoint_Init(0);
+    Endpoint endpoint = TestEndpoint_Init();
     EndpointRegistry_RegisterEndpoint(&node, endpoint);
 
     ASSERT_EQ(node.__endpointCount, 1);
