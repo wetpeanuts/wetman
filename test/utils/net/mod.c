@@ -1,10 +1,10 @@
 #include <wetman/utils/test/macro.h>
 
-#include "ut_server_node.c"
+#include "ut_endpoint_registry.c"
 
 void registerUtilNetTests(void)
 {
-    REGISTER_TEST(ServerNodeTest_New);
-    REGISTER_TEST(ServerNodeTest_RegisterEndpoint);
-    REGISTER_TEST(ServerNodeTest_CallEndpoint);
+    REGISTER_TEST(EndpointRegistryTest_New);
+    REGISTER_TEST(EndpointRegistryTest_RegisterEndpoint);
+    REGISTER_TEST(EndpointRegistryTest_CallEndpoint);
 }
