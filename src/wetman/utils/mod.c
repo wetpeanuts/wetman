@@ -6,6 +6,7 @@
 #include <wetman/utils/net/mod.c>
 #include <wetman/utils/test/mod.c>
 
+#include <wetman/utils/data_stream.c>
 #include <wetman/utils/time.c>
 
 #endif // WETMAN_UTILS_MOD_C 
