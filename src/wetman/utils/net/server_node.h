@@ -17,7 +17,7 @@ typedef struct {
     size_t endpointCount;
 } ServerNode;
 
-ServerNode ServerNode_New();
+ServerNode ServerNode_New(void);
 void ServerNode_RegisterEndpoint(ServerNode* serverNode, Endpoint endpoint);
 ReturnCode ServerNode_CallEndpoint(
         ServerNode* serverNode,

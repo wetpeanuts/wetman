@@ -52,28 +52,28 @@ TEST(ArenaTest_Alloc)
     Arena arena = Arena_New();
 
     // First allocation
-    void* data = Arena_Alloc(&arena, 1024);
-    ASSERT_NE(data, NULL);
+    unsigned char* data = (unsigned char*)Arena_Alloc(&arena, 1024);
+    ASSERT_NE(data, (unsigned char*)NULL);
 
     // Allocate on the same page
-    void* dataSamePage = Arena_Alloc(&arena, 2048);
-    ASSERT_NE(dataSamePage, NULL);
+    unsigned char* dataSamePage = (unsigned char*)Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataSamePage, (unsigned char*)NULL);
     EXPECT_EQ(data + 1024, dataSamePage);
 
     // Not enough space on the same page, allocate on a new page
-    void* dataDiffPage = Arena_Alloc(&arena, 2048);
-    ASSERT_NE(dataDiffPage, NULL);
+    unsigned char* dataDiffPage = (unsigned char*)Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataDiffPage, (unsigned char*)NULL);
     ASSERT_NE(dataSamePage + 2048, dataDiffPage);
 
     // Data chunk larger than defaul page size
     // Always takes a new page of requested size
-    void* dataLarge = Arena_Alloc(&arena, 5120);
-    ASSERT_NE(dataLarge, NULL);
+    unsigned char* dataLarge = (unsigned char*)Arena_Alloc(&arena, 5120);
+    ASSERT_NE(dataLarge, (unsigned char*)NULL);
     ASSERT_NE(dataDiffPage + 2048, dataLarge);
 
     // Next allocation on a new page
-    void* dataAfterLarge = Arena_Alloc(&arena, 1024);
-    ASSERT_NE(dataAfterLarge, NULL);
+    unsigned char* dataAfterLarge = (unsigned char*)Arena_Alloc(&arena, 1024);
+    ASSERT_NE(dataAfterLarge, (unsigned char*)NULL);
     ASSERT_NE(dataLarge + 5120, dataAfterLarge);
 
     Arena_Free(&arena);
@@ -88,28 +88,28 @@ TEST(ArenaTest_CanAllocOnSamePage)
     EXPECT_EQ(Arena_CanAllocOnSamePage(&arena, 5120), NULL);
 
     // First allocation
-    void* data = Arena_Alloc(&arena, 1024);
-    ASSERT_NE(data, NULL);
+    unsigned char* data = (unsigned char*)Arena_Alloc(&arena, 1024);
+    ASSERT_NE(data, (unsigned char*)NULL);
 
     // Allocate on the same page
-    void* dataSamePage = Arena_Alloc(&arena, 2048);
-    ASSERT_NE(dataSamePage, NULL);
+    unsigned char* dataSamePage = (unsigned char*)Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataSamePage, (unsigned char*)NULL);
     EXPECT_EQ(data + 1024, dataSamePage);
 
     // Not enough space on the same page, allocate on a new page
-    void* dataDiffPage = Arena_Alloc(&arena, 2048);
-    ASSERT_NE(dataDiffPage, NULL);
+    unsigned char* dataDiffPage = (unsigned char*)Arena_Alloc(&arena, 2048);
+    ASSERT_NE(dataDiffPage, (unsigned char*)NULL);
     ASSERT_NE(dataSamePage + 2048, dataDiffPage);
 
     // Data chunk larger than defaul page size
     // Always takes a new page of requested size
-    void* dataLarge = Arena_Alloc(&arena, 5120);
-    ASSERT_NE(dataLarge, NULL);
+    unsigned char* dataLarge = (unsigned char*)Arena_Alloc(&arena, 5120);
+    ASSERT_NE(dataLarge, (unsigned char*)NULL);
     ASSERT_NE(dataDiffPage + 2048, dataLarge);
 
     // Next allocation on a new page
-    void* dataAfterLarge = Arena_Alloc(&arena, 1024);
-    ASSERT_NE(dataAfterLarge, NULL);
+    unsigned char* dataAfterLarge = (unsigned char*)Arena_Alloc(&arena, 1024);
+    ASSERT_NE(dataAfterLarge, (unsigned char*)NULL);
     ASSERT_NE(dataLarge + 5120, dataAfterLarge);
 
     Arena_Free(&arena);

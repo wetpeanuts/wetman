@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-ServerNode ServerNode_New()
+ServerNode ServerNode_New(void)
 {
     ServerNode node = {
         .endpointCount = 0,

@@ -15,7 +15,7 @@
 
 #define EXPECT_EQ(actual, expected) \
     do { \
-        if ((expected) != (actual)) { \
+        if ((actual) != (expected)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %lld (%s)\n", (long long)(expected), (#expected)); \
             printf("  Actual:   %lld (%s)\n", (long long)(actual), (#actual)); \
@@ -25,7 +25,7 @@
 
 #define EXPECT_NE(actual, expected) \
     do { \
-        if ((expected) == (actual)) { \
+        if ((actual) == (expected)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %s != %s (%lld)\n", (#actual), (#expected), (long long)(actual)); \
             __testCaseStat->failureCount++; \
@@ -43,7 +43,7 @@
 
 #define ASSERT_EQ(actual, expected) \
     do { \
-        if ((expected) != (actual)) { \
+        if ((actual) != (expected)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %lld (%s)\n", (long long)(expected), (#expected)); \
             printf("  Actual:   %lld (%s)\n", (long long)(actual), (#actual)); \
@@ -54,7 +54,7 @@
 
 #define ASSERT_NE(actual, expected) \
     do { \
-        if ((expected) == (actual)) { \
+        if ((actual) == (expected)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %s != %s (%lld)\n", (#actual), (#expected), (long long)(actual)); \
             __testCaseStat->failureCount++; \

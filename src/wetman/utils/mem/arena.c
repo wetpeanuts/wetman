@@ -23,9 +23,10 @@ __ArenaPageHeader* __allocPage(size_t capacity)
     return page;
 }
 
-void* __pageData(__ArenaPageHeader* page)
+void* __pageData(__ArenaPageHeader* page, size_t offset)
 {
-    return (void*)(page + 1);
+    // TODO: consider alignment
+    return (void*)(((unsigned char*)(page + 1)) + offset);
 }
 
 Arena Arena_New(void)
@@ -52,14 +53,14 @@ void* Arena_Alloc(Arena* arena, size_t size)
 
     const size_t newSize = tailPage->__size + size;
     if (newSize <= tailPage->__capacity) {
-        void* data = __pageData(tailPage) + tailPage->__size;
+        void* data = __pageData(tailPage, tailPage->__size);
         tailPage->__size = newSize;
         return data;
     }
 
     __ArenaPageHeader* newTailPage = __allocPage(MAX(arena->__headPage->__capacity, size));
 
-    void* data = __pageData(newTailPage);
+    void* data = __pageData(newTailPage, 0);
     newTailPage->__size = size;
     newTailPage->__prevPage = arena->__tailPage;
     arena->__tailPage = newTailPage;
@@ -72,7 +73,7 @@ void* Arena_CanAllocOnSamePage(Arena* arena, size_t size)
     assert(tailPage);
 
     if (tailPage->__size + size <= tailPage->__capacity) {
-        return __pageData(tailPage) + tailPage->__size;
+        return __pageData(tailPage, tailPage->__size);
     }
 
     return NULL;
