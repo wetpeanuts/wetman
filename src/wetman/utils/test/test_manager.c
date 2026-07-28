@@ -5,12 +5,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const char* resultLabel(int success)
+const char* __resultLabel(int success)
 {
     if (success) {
         return "\033[32mPASSED\033[0m";
     } else {
         return "\033[31mFAILED\033[0m";
+    }
+}
+
+void __timeToStr(char* buf, size_t bufLen, long long ts)
+{
+    if (ts > 1000) {
+        snprintf(buf, bufLen, "%llds", ts / 1000);
+    } else {
+        snprintf(buf, bufLen, "%lldms", ts);
     }
 }
 
@@ -33,6 +42,8 @@ void TestManager_RunTests(void)
     const int prefixlen = 24;
     const char* gap = "........................";
 
+
+    const long long totalTsBegin = currentTimestampMs();
     for (uint32_t i = 0; i < __globalTestManager.testCount; ++i) {
         const uint32_t testCount = __globalTestManager.testCount;
         const char* testName = __globalTestManager.testNames[i];
@@ -49,14 +60,10 @@ void TestManager_RunTests(void)
         __globalTestManager.tests[i](&testCaseStat);
         const long long tsEnd = currentTimestampMs();
 
-        const long long totalTime = tsEnd - tsBegin;
-        if (totalTime > 1000) {
-            snprintf(timeBuf, timeBufLen, "%llds", totalTime / 1000);
-        } else {
-            snprintf(timeBuf, timeBufLen, "%lldms", totalTime);
-        }
+        const long long testTime = tsEnd - tsBegin;
+        __timeToStr(timeBuf, timeBufLen, testTime);
 
-        const char* result = resultLabel(!testCaseStat.failureCount);
+        const char* result = __resultLabel(!testCaseStat.failureCount);
         if (testCaseStat.failureCount) {
             __globalTestManager.failedTestCount++;
         }
@@ -66,6 +73,9 @@ void TestManager_RunTests(void)
         printf("%s%.*s%s %s\n",
                 statusBuf, prefixlen - actualPrefixLen + 9, gap, testName, timeBuf);
     }
+    const long long totalTsEnd = currentTimestampMs();
+    const long long totalTime = totalTsEnd - totalTsBegin;
+    __timeToStr(timeBuf, timeBufLen, totalTime);
 
     const uint32_t testCount = __globalTestManager.testCount;
     const uint32_t testRunCount = __globalTestManager.testRunCount;
@@ -74,10 +84,10 @@ void TestManager_RunTests(void)
     const uint32_t successTestCount = testRunCount - failedTestCount;
     const uint32_t skippedTestCount = testCount - testRunCount;
 
-    const char* result = resultLabel(!skippedTestCount && !failedTestCount);
+    const char* result = __resultLabel(!skippedTestCount && !failedTestCount);
 
     printf("=================\n");
-    printf("[RESULT:  %s]\n", result);
+    printf("[RESULT:  %s] Total time: %s\n", result, timeBuf);
     printf("=================\n");
     printf("[PASSED:  \033[32m%d/%d\033[0m]\n", successTestCount, testCount);
     printf("[SKIPPED: \033[31m%d/%d\033[0m]\n", skippedTestCount, testCount);
