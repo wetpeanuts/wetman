@@ -2,13 +2,14 @@
 #define WETMAN_UTILS_STR_H
 
 #include <wetman/utils/mem/arena.h>
+#include <wetman/utils/type.h>
 
 #include <stdint.h>
 
 
 typedef struct {
     const char* data;
-    uint32_t len;
+    usize       len;
 } Str;
 
 Str Str_FromCStr(const char* str);

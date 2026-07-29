@@ -39,7 +39,7 @@ Str Str_Concat(Str s1, Str s2, Arena* arena)
         return s2;
     }
 
-    const uint32_t newLen = s1.len + s2.len;
+    const usize newLen = s1.len + s2.len;
     void* dataCandidate = Arena_CanAllocOnSamePage(arena, s2.len);
     if (dataCandidate && s1.data + s1.len == dataCandidate) {
         // s1 and s2 can be allocated sequentially on the same arena page

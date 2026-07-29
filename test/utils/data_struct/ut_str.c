@@ -5,30 +5,30 @@
 TEST(StrTest_EqCStr)
 {
     typedef struct {
-        Str s1;
+        Str         s1;
         const char* s2;
-        int compareResult;
+        int         compareResult;
     } CompareData;
     
     CompareData compareData[] = {
         {
-            .s1 = Str_FromCStr(""),
-            .s2 = "",
+            .s1            = Str_FromCStr(""),
+            .s2            = "",
             .compareResult = 1,
         },
         {
-            .s1 = Str_FromCStr("test"),
-            .s2 = "test",
+            .s1            = Str_FromCStr("test"),
+            .s2            = "test",
             .compareResult = 1,
         },
         {
-            .s1 = Str_FromCStr(""),
-            .s2 = "test",
+            .s1            = Str_FromCStr(""),
+            .s2            = "test",
             .compareResult = 0,
         },
         {
-            .s1 = Str_FromCStr("test"),
-            .s2 = "",
+            .s1            = Str_FromCStr("test"),
+            .s2            = "",
             .compareResult = 0,
         }
     }; 
@@ -49,23 +49,23 @@ TEST(StrTest_EqStr)
     
     CompareData compareData[] = {
         {
-            .s1 = Str_FromCStr(""),
-            .s2 = Str_FromCStr(""),
+            .s1            = Str_FromCStr(""),
+            .s2            = Str_FromCStr(""),
             .compareResult = 1,
         },
         {
-            .s1 = Str_FromCStr("test"),
-            .s2 = Str_FromCStr("test"),
+            .s1            = Str_FromCStr("test"),
+            .s2            = Str_FromCStr("test"),
             .compareResult = 1,
         },
         {
-            .s1 = Str_FromCStr(""),
-            .s2 = Str_FromCStr("test"),
+            .s1            = Str_FromCStr(""),
+            .s2            = Str_FromCStr("test"),
             .compareResult = 0,
         },
         {
-            .s1 = Str_FromCStr("test"),
-            .s2 = Str_FromCStr(""),
+            .s1            = Str_FromCStr("test"),
+            .s2            = Str_FromCStr(""),
             .compareResult = 0,
         }
     }; 
@@ -80,17 +80,17 @@ TEST(StrTest_FromCStr)
 {
     typedef struct {
         const char* cStr;
-        uint32_t len;
+        usize       len;
     } TestData;
 
     TestData testData[] = {
         {
             .cStr = "",
-            .len = 0,
+            .len  = 0,
         },
         {
             .cStr = "test",
-            .len = 4,
+            .len  = 4,
         },
     };
     
@@ -111,28 +111,28 @@ TEST(StrTest_Concat)
 
     TestData testData[] = {
         {
-            .s1 = "",
-            .s2 = "",
+            .s1       = "",
+            .s2       = "",
             .expected = "",
         },
         {
-            .s1 = "Hello",
-            .s2 = "",
+            .s1       = "Hello",
+            .s2       = "",
             .expected = "Hello",
         },
         {
-            .s1 = "",
-            .s2 = "World",
+            .s1       = "",
+            .s2       = "World",
             .expected = "World",
         },
         {
-            .s1 = "Hello",
-            .s2 = "World",
+            .s1       = "Hello",
+            .s2       = "World",
             .expected = "HelloWorld",
         },
         {
-            .s1 = "Hello",
-            .s2 = "World!",
+            .s1       = "Hello",
+            .s2       = "World!",
             .expected = "HelloWorld!",
         },
     };
