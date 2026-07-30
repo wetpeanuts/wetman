@@ -31,12 +31,28 @@ int Str_EqCStr(Str s1, const char* s2)
 
 Str Str_Concat(Str s1, Str s2, Arena* arena)
 {
-    if (s2.len == 0) {
-        return s1;
+    if (s1.len == 0 && s2.len == 0) {
+        return Str_FromCStr("");
     }
+    if (s2.len == 0) {
+        char* data = Arena_Alloc(arena, s1.len);
+        memcpy(data, s1.data, s1.len);
 
+        Str result = {
+            .data = data,
+            .len  = s1.len,
+        };
+        return result;
+    }
     if (s1.len == 0) {
-        return s2;
+        char* data = Arena_Alloc(arena, s2.len);
+        memcpy(data, s2.data, s2.len);
+
+        Str result = {
+            .data = data,
+            .len  = s2.len,
+        };
+        return result;
     }
 
     const usize newLen = s1.len + s2.len;
