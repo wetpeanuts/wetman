@@ -35,8 +35,8 @@ TEST(DataStream_PushPop_I32)
         ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_FORMAT);
     }
 
-    EXPECT_EQ(value1, deserializedValue1);
-    EXPECT_EQ(value2, deserializedValue2);
+    EXPECT_EQ(deserializedValue1, value1);
+    EXPECT_EQ(deserializedValue2, value2);
 
     Arena_Free(&arena);
 }
@@ -73,8 +73,8 @@ TEST(DataStream_PushPop_U32)
         ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_FORMAT);
     }
 
-    EXPECT_EQ(value1, deserializedValue1);
-    EXPECT_EQ(value2, deserializedValue2);
+    EXPECT_EQ(deserializedValue1, value1);
+    EXPECT_EQ(deserializedValue2, value2);
 
     Arena_Free(&arena);
 }
@@ -111,8 +111,8 @@ TEST(DataStream_PushPop_Str)
         ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_FORMAT);
     }
 
-    EXPECT(Str_EqStr(value1, deserializedValue1));
-    EXPECT(Str_EqStr(value2, deserializedValue2));
+    EXPECT(Str_EqStr(deserializedValue1, value1));
+    EXPECT(Str_EqStr(deserializedValue2, value2));
 
     Arena_Free(&arena);
 }
