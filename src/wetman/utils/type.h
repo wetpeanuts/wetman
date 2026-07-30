@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <unistd.h>
 
 
 typedef int8_t   i8;
@@ -15,5 +16,6 @@ typedef int64_t  i64;
 typedef uint64_t u64;
 
 typedef size_t   usize;
+typedef ssize_t  isize;
 
 #endif // WETMAN_UTILS_TYPE_H
