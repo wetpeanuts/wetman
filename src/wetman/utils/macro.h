@@ -11,6 +11,9 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+#define FALSE 0
+#define TRUE 1
+
 #else
 
 #define UNLIKELY(x) (x)
