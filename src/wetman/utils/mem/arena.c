@@ -9,6 +9,13 @@
 #define __ARENA_DEFAULT_PAGE_CAPACITY 4096
 
 
+struct __ArenaPageHeader {
+    size_t             __size;
+    size_t             __capacity;
+    __ArenaPageHeader* __prevPage;
+};
+
+
 __ArenaPageHeader* __allocPage(size_t capacity)
 {
     assert(capacity > 0);
@@ -105,3 +112,9 @@ void Arena_Free(Arena* arena)
     arena->__headPage = NULL;
     arena->__tailPage = NULL;
 }
+
+int Arena_IsValid(const Arena* arena)
+{
+    return arena->__headPage && arena->__tailPage;
+}
+

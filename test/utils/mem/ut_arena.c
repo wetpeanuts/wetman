@@ -5,7 +5,10 @@
 TEST(ArenaTest_NewFree)
 {
     Arena arena = Arena_New();
+    ASSERT(Arena_IsValid(&arena));
+
     Arena_Free(&arena);
+    ASSERT(!Arena_IsValid(&arena));
 }
 
 TEST(ArenaTest_NewReset)
@@ -17,6 +20,7 @@ TEST(ArenaTest_NewReset)
     ASSERT_NE(data, NULL);
 
     Arena_Reset(&arena);
+    ASSERT(Arena_IsValid(&arena));
 
     // Memory reused
     void* dataSameMem = Arena_Alloc(&arena, 2048);
