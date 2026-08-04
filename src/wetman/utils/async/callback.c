@@ -1,4 +1,4 @@
-#include <wetman/utils/callback.h>
+#include <wetman/utils/async/callback.h>
 
 #include <stddef.h>
 
@@ -29,9 +29,18 @@ Callback Callback_WithNoArgs(CallbackHandlerNoArgs callbackHandler)
     return callback;
 }
 
-void Callback_Invoke(Callback callback)
+void Callback_Invoke(Callback* callback)
 {
-    callback.handler(&callback.arena, callback.payload);
-    Arena_Free(&callback.arena);
+    callback->handler(&callback->arena, callback->payload);
+
+    Arena_Free(&callback->arena);
+    callback->handler = NULL;
+    callback->payload = NULL;
+}
+
+int Callback_IsValid(const Callback* callback)
+{
+    return Arena_IsValid(&callback->arena)
+            && callback->handler != NULL;
 }
 
