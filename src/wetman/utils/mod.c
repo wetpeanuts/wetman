@@ -5,6 +5,7 @@
 #include <wetman/utils/data_struct/mod.c>
 #include <wetman/utils/mem/mod.c>
 #include <wetman/utils/net/mod.c>
+#include <wetman/utils/proc/mod.c>
 #include <wetman/utils/test/mod.c>
 
 #include <wetman/utils/data_stream.c>

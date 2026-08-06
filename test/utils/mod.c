@@ -6,6 +6,7 @@
 #include "data_struct/mod.c"
 #include "mem/mod.c"
 #include "net/mod.c"
+#include "proc/mod.c"
 
 
 void registerUtilTests(void)
@@ -18,4 +19,5 @@ void registerUtilTests(void)
     registerUtilDataStructTests();
     registerUtilMemTests();
     registerUtilNetTests();
+    registerUtilProcTests();
 }
