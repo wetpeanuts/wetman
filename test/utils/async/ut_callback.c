@@ -9,16 +9,16 @@ typedef struct __CallbackTestPayload {
     int newStatus;
 } __CallbackTestPayload;
 
-void callbackWithNoArgs(Arena* arena)
+void callbackWithNoArgs(Callback* callbackMeta)
 {
-    (void)arena;
+    (void)callbackMeta->arena;
     __callbackTestWithNoArgsGlobalCounter++;
 }
 
-void callbackWithArgs(Arena* arena, void* payload)
+void callbackWithArgs(Callback* callbackMeta)
 {
-    (void)arena;
-    __CallbackTestPayload* p = (__CallbackTestPayload*)payload;
+    (void)callbackMeta->arena;
+    __CallbackTestPayload* p = (__CallbackTestPayload*)callbackMeta->payload;
     __callbackTestWithArgsGlobalStatus = p->newStatus;
 }
 
@@ -41,11 +41,10 @@ TEST(CallbackTest_WithArgs)
             &arena, sizeof(__CallbackTestPayload));
     payload->newStatus = 42;
 
-    Callback callback = {
-        .handler = callbackWithArgs,
-        .payload = payload,
-        .arena   = arena,
-    };
+    Callback callback = Callback_New(
+            callbackWithArgs,
+            payload,
+            arena);
     ASSERT(Callback_IsValid(&callback));
 
     Callback_Invoke(&callback);

@@ -5,9 +5,9 @@
 static int __EventLoopTest_globalNonRecursiveCounter = 0;
 static int __EventLoopTest_globalRecursiveCounter = 0;
 
-void __EventLoopTest_callbacNonRecursive(Arena* arena)
+void __EventLoopTest_callbacNonRecursive(Callback* callbackMeta)
 {
-    (void)arena;
+    (void)callbackMeta->arena;
     __EventLoopTest_globalNonRecursiveCounter++;
 }
 
@@ -15,16 +15,16 @@ typedef struct __EventLoopTest_RecursivePayload {
     EventLoop* eventLoop;
 } __EventLoopTest_RecursivePayload;
 
-void __EventLoopTest_callbackRecursive(Arena* arena, void* payload)
+void __EventLoopTest_callbackRecursive(Callback* callbackMeta)
 {
-    (void)arena;
+    (void)callbackMeta->arena;
     if (__EventLoopTest_globalRecursiveCounter == 1000) {
         return;
     };
 
     __EventLoopTest_globalRecursiveCounter++;
 
-    __EventLoopTest_RecursivePayload* p = (__EventLoopTest_RecursivePayload*)payload;
+    __EventLoopTest_RecursivePayload* p = (__EventLoopTest_RecursivePayload*)callbackMeta->payload;
 
     Arena recursiveArena = Arena_New();
     __EventLoopTest_RecursivePayload* recursivePayload =
@@ -32,11 +32,10 @@ void __EventLoopTest_callbackRecursive(Arena* arena, void* payload)
                     &recursiveArena, sizeof(__EventLoopTest_RecursivePayload));
     recursivePayload->eventLoop = p->eventLoop;
 
-    Callback callback = {
-        .handler = __EventLoopTest_callbackRecursive,
-        .payload = recursivePayload,
-        .arena   = recursiveArena,
-    };
+    Callback callback = Callback_New(
+            __EventLoopTest_callbackRecursive,
+            recursivePayload,
+            recursiveArena);
 
     EventLoop_Push(p->eventLoop, callback);
 }
@@ -73,11 +72,10 @@ TEST(EventLoopTest_Exec_Recursive)
                     &arena, sizeof(__EventLoopTest_RecursivePayload));
     payload->eventLoop = &eventLoop;
 
-    Callback callback = {
-        .handler = __EventLoopTest_callbackRecursive,
-        .payload = payload,
-        .arena   = arena,
-    };
+    Callback callback = Callback_New(
+            __EventLoopTest_callbackRecursive,
+            payload,
+            arena);
 
     ASSERT(EventLoop_Push(&eventLoop, callback));
     ASSERT_EQ(EventLoop_PendingCount(&eventLoop), 1);

@@ -3,16 +3,31 @@
 #include <stddef.h>
 
 typedef struct {
-    CallbackHandlerNoArgs callbackHandler;
+    CallbackHandler callbackHandler;
 } __CallbackPayloadNoArgs;
 
-void __callbackHandlerNoArgs(Arena* arena, void* payload)
+void __callbackHandlerNoArgs(Callback* callbackMeta)
 {
-    __CallbackPayloadNoArgs* payloadNoArgs = (__CallbackPayloadNoArgs*)payload;
-    payloadNoArgs->callbackHandler(arena);
+    __CallbackPayloadNoArgs* payloadNoArgs = (__CallbackPayloadNoArgs*)callbackMeta->payload;
+    payloadNoArgs->callbackHandler(callbackMeta);
 }
 
-Callback Callback_WithNoArgs(CallbackHandlerNoArgs callbackHandler)
+Callback Callback_New(
+        CallbackHandler callbackHandler,
+        void*           payload,
+        Arena           arena)
+{
+    Callback callback = {
+        .handler     = callbackHandler,
+        .payload     = payload,
+        .arena       = arena,
+        .arenaPolicy = CALLBACK_ARENA_POLICY_FREE,
+    };
+
+    return callback;
+}
+
+Callback Callback_WithNoArgs(CallbackHandler callbackHandler)
 {
     Arena arena = Arena_New();
 
@@ -20,20 +35,27 @@ Callback Callback_WithNoArgs(CallbackHandlerNoArgs callbackHandler)
             &arena, sizeof(__CallbackPayloadNoArgs));
     payload->callbackHandler = callbackHandler;
 
-    Callback callback = {
-        .handler = __callbackHandlerNoArgs,
-        .payload = (void*)payload,
-        .arena   = arena,
-    };
-
-    return callback;
+    return Callback_New(
+            __callbackHandlerNoArgs,
+            (void*)payload,
+            arena);
 }
 
 void Callback_Invoke(Callback* callback)
 {
-    callback->handler(&callback->arena, callback->payload);
+    callback->handler(callback);
 
-    Arena_Free(&callback->arena);
+    switch (callback->arenaPolicy) {
+        case CALLBACK_ARENA_POLICY_FREE:
+            Arena_Free(&callback->arena);
+            break;
+        case CALLBACK_ARENA_POLICY_RESET:
+            Arena_Reset(&callback->arena);
+            break;
+        case CALLBACK_ARENA_POLICY_DO_NOTHING:
+            break;
+    }
+
     callback->handler = NULL;
     callback->payload = NULL;
 }

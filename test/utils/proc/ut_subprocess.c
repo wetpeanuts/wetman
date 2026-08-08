@@ -4,14 +4,14 @@
 #include <sys/wait.h>
 
 
-void __subprocessTestCallbackSuccess(Arena* arena)
+void __subprocessTestCallbackSuccess(Callback* callbackMeta)
 {
-    (void)arena;
+    (void)callbackMeta;
 }
 
-void __subprocessTestCallbackFailure(Arena* arena)
+void __subprocessTestCallbackFailure(Callback* callbackMeta)
 {
-    (void)arena;
+    (void)callbackMeta;
     exit(42);
 }
 
