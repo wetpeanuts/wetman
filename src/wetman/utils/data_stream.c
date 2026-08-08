@@ -1,8 +1,14 @@
 #include <wetman/utils/data_stream.h>
 
-#include <assert.h>
-#include <string.h>
+#include <wetman/utils/macro.h>
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+
+#define __DATA_STREAM_BUF_LEN 16
 
 typedef enum {
     DATA_TYPE_I32,
@@ -27,6 +33,35 @@ DataStream DataStream_WithData(DataSlice data)
         .__data     = data,
     };
     return dataStream;
+}
+
+DataStream DataStream_Read(int fd, Arena* arena)
+{
+    DataSlice data = Str_FromCStr("");
+    char buf[__DATA_STREAM_BUF_LEN];
+
+    while (TRUE) {
+        isize chunkLen = read(fd, buf, __DATA_STREAM_BUF_LEN);
+        if (chunkLen <= 0) {
+            break;
+        }
+
+        DataSlice dataChunk = {
+            .data = buf,
+            .len  = chunkLen,
+        };
+        data = Str_Concat(data, dataChunk, arena);
+    }
+
+    return DataStream_WithData(data);
+}
+
+void DataStream_Write(const DataStream* dataStream, int fd)
+{
+    isize writtenLen = write(fd, dataStream->__data.data, dataStream->__data.len);
+    if (writtenLen != (isize)dataStream->__data.len) {
+        fprintf(stderr, "Failed to dump data stream");
+    }
 }
 
 void DataStream_PushI32(DataStream* dataStream, i32 value, Arena* arena)

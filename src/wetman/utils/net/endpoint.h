@@ -10,11 +10,12 @@ typedef int EndpointId;
 typedef ReturnCode(*EndpointHandler)(void*,void*);
 typedef void*(*EndpointRequestParser)(Arena*,Str);
 typedef void*(*EndpointResponseFactory)(Arena*);
+// typedef Str(*EndpointResponseSerializer)(void*, Arena*);
 
 typedef struct {
-    EndpointId id;
-    EndpointHandler handler;
-    EndpointRequestParser requestParser;
+    EndpointId              id;
+    EndpointHandler         handler;
+    EndpointRequestParser   requestParser;
     EndpointResponseFactory responseFactory;
 } Endpoint;
 

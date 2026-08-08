@@ -25,6 +25,9 @@ typedef struct {
 DataStream DataStream_New(void);
 DataStream DataStream_WithData(DataSlice data);
 
+DataStream DataStream_Read(int fd, Arena* arena);
+void DataStream_Write(const DataStream* dataStream, int fd);
+
 void DataStream_PushI32(DataStream* dataStream, i32 value, Arena* arena);
 i32 DataStream_PopI32(DataStream* dataStream);
 
