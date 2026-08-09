@@ -14,6 +14,8 @@ typedef enum
     DATA_STREAM_RESULT_FAILED_ALLOCATE_MEMORY,
     DATA_STREAM_RESULT_WRONG_VALUE_TYPE,
     DATA_STREAM_RESULT_WRONG_VALUE_FORMAT,
+    DATA_STREAM_RESULT_FAILED_WRITE,
+    DATA_STREAM_RESULT_FAILED_READ,
 } DataStreamResult;
 
 typedef struct {
@@ -26,7 +28,7 @@ DataStream DataStream_New(void);
 DataStream DataStream_WithData(DataSlice data);
 
 DataStream DataStream_Read(int fd, Arena* arena);
-void DataStream_Write(const DataStream* dataStream, int fd);
+void DataStream_Write(DataStream* dataStream, int fd);
 
 void DataStream_PushI32(DataStream* dataStream, i32 value, Arena* arena);
 i32 DataStream_PopI32(DataStream* dataStream);

@@ -2,6 +2,8 @@
 
 #include <wetman/utils/data_stream.h>
 
+#include <fcntl.h>
+
 
 TEST(DataStream_PushPop_I32)
 {
@@ -113,6 +115,43 @@ TEST(DataStream_PushPop_Str)
 
     EXPECT(Str_EqStr(deserializedValue1, value1));
     EXPECT(Str_EqStr(deserializedValue2, value2));
+
+    Arena_Free(&arena);
+}
+
+TEST(DataStream_ReadWrite)
+{
+    i32 fdTmp = CREATE_TMP_FILE(O_RDWR | O_CREAT | O_TRUNC);
+
+    Arena      arena      = Arena_New();
+    DataStream dataStream = DataStream_New();
+
+    Str value1 = Str_FromCStr("Hello");
+    i32 value2 = 42;
+
+    DataStream_PushStr(&dataStream, value1, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream_PushI32(&dataStream, value2, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream_Write(&dataStream, fdTmp);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Reset file offset after write
+    ASSERT(lseek(fdTmp, 0, SEEK_SET) != (off_t)-1);
+
+    dataStream = DataStream_Read(fdTmp, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    Str deserializedValue1 = DataStream_PopStr(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    i32 deserializedValue2 = DataStream_PopI32(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    EXPECT(Str_EqStr(deserializedValue1, value1));
+    EXPECT_EQ(deserializedValue2, value2);
 
     Arena_Free(&arena);
 }

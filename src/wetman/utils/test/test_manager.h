@@ -1,26 +1,43 @@
 #ifndef WETMAN_TEST_UTILS_TEST_MANAGER_H
 #define WETMAN_TEST_UTILS_TEST_MANAGER_H
 
+#include <wetman/utils/type.h>
+
 #include <stdint.h>
 
 
 #define MAX_TEST_COUNT 1024
 
 typedef struct {
-    uint32_t failureCount;
-} TestCaseStat;
+    const char* cwd;
+    const char* tmpFileDir;
+    u32         tmpFileCount;
+} __TestManagerGlobalContext;
 
 typedef struct {
-    void(*tests[MAX_TEST_COUNT])(TestCaseStat*);
-    const char* testNames[MAX_TEST_COUNT];
-    uint32_t testCount;
-    uint32_t testRunCount;
-    uint32_t failedTestCount;
-} TestManager;
+    const char* testCaseName;
+    u32         failureCount;
+} __TestCaseContext;
 
-void TestManager_RegisterTest(void(*test)(TestCaseStat*), const char* testName);
-void TestManager_RunTests(void);
+typedef void(*__TestCaseHandler)(__TestCaseContext*, __TestManagerGlobalContext*);
 
-extern TestManager __globalTestManager;
+typedef struct {
+    __TestManagerGlobalContext context;
+    __TestCaseHandler          tests[MAX_TEST_COUNT];
+    const char*                testNames[MAX_TEST_COUNT];
+    u32                        testCount;
+    u32                        testRunCount;
+    u32                        failedTestCount;
+    i64                        totalTime;
+} __TestManager;
+
+void __TestManager_RegisterTest(__TestCaseHandler test, const char* testName);
+void __TestManager_RunTests(const char* wdir);
+i32  __TestManager_CreateTmpFile(
+        __TestManagerGlobalContext* globalContext,
+        __TestCaseContext*          testCaseContext,
+        i32                         flags);
+
+extern __TestManager __globalTestManager;
 
 #endif // WETMAN_TEST_UTILS_TEST_MANAGER_H 

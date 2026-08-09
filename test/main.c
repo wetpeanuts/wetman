@@ -8,5 +8,5 @@ int main(void)
 {
     registerUtilTests();
 
-    RUN_TESTS();
+    RUN_TESTS_IN_WDIR(".test_wdir");
 }

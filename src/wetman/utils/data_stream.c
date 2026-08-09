@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 
-#define __DATA_STREAM_BUF_LEN 16
+#define __DATA_STREAM_BUF_LEN 256
 
 typedef enum {
     DATA_TYPE_I32,
@@ -56,12 +56,15 @@ DataStream DataStream_Read(int fd, Arena* arena)
     return DataStream_WithData(data);
 }
 
-void DataStream_Write(const DataStream* dataStream, int fd)
+void DataStream_Write(DataStream* dataStream, int fd)
 {
     isize writtenLen = write(fd, dataStream->__data.data, dataStream->__data.len);
     if (writtenLen != (isize)dataStream->__data.len) {
-        fprintf(stderr, "Failed to dump data stream");
+        dataStream->lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
+        return;
     }
+
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
 }
 
 void DataStream_PushI32(DataStream* dataStream, i32 value, Arena* arena)

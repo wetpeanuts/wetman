@@ -7,11 +7,16 @@
 #include <stdio.h>
 
 
-#define TEST(test) void test(TestCaseStat* __testCaseStat MAYBE_UNUSED)
+#define TEST(test) void test( \
+        __TestCaseContext*          __testCaseContext          MAYBE_UNUSED, \
+        __TestManagerGlobalContext* __testManagerGlobalContext MAYBE_UNUSED)
 
-#define REGISTER_TEST(test) TestManager_RegisterTest(test, #test)
+#define REGISTER_TEST(test) __TestManager_RegisterTest(test, #test)
 
-#define RUN_TESTS() TestManager_RunTests()
+#define RUN_TESTS() __TestManager_RunTests(".")
+#define RUN_TESTS_IN_WDIR(wdir) __TestManager_RunTests(wdir)
+
+#define CREATE_TMP_FILE(flags) (__TestManager_CreateTmpFile(__testManagerGlobalContext, __testCaseContext, flags))
 
 #define EXPECT_EQ(actual, expected) \
     do { \
@@ -19,7 +24,7 @@
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %lld (%s)\n", (long long)(expected), (#expected)); \
             printf("  Actual:   %lld (%s)\n", (long long)(actual), (#actual)); \
-            __testCaseStat->failureCount++; \
+            __testCaseContext->failureCount++; \
         } \
     } while (0)
 
@@ -28,7 +33,7 @@
         if ((actual) == (expected)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %s != %s (%lld)\n", (#actual), (#expected), (long long)(actual)); \
-            __testCaseStat->failureCount++; \
+            __testCaseContext->failureCount++; \
         } \
     } while (0)
 
@@ -37,7 +42,7 @@
         if (!(condition)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Condition is false: %s\n", (#condition)); \
-            __testCaseStat->failureCount++; \
+            __testCaseContext->failureCount++; \
         } \
     } while (0)
 
@@ -47,7 +52,7 @@
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %lld (%s)\n", (long long)(expected), (#expected)); \
             printf("  Actual:   %lld (%s)\n", (long long)(actual), (#actual)); \
-            __testCaseStat->failureCount++; \
+            __testCaseContext->failureCount++; \
             return; \
         } \
     } while (0)
@@ -57,7 +62,7 @@
         if ((actual) == (expected)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Expected: %s != %s (%lld)\n", (#actual), (#expected), (long long)(actual)); \
-            __testCaseStat->failureCount++; \
+            __testCaseContext->failureCount++; \
             return; \
         } \
     } while (0)
@@ -67,7 +72,7 @@
         if (!(condition)) { \
             printf("[FAIL] %s:%d\n", __FILE__, __LINE__); \
             printf("  Condition is false: %s\n", (#condition)); \
-            __testCaseStat->failureCount++; \
+            __testCaseContext->failureCount++; \
             return; \
         } \
     } while (0)
