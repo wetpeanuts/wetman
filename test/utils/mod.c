@@ -11,11 +11,12 @@
 
 void registerUtilTests(void)
 {
-    REGISTER_TEST(DataStream_PushPop_I32);
-    REGISTER_TEST(DataStream_PushPop_U32);
-    REGISTER_TEST(DataStream_PushPop_Str);
-    REGISTER_TEST(DataStream_ReadWrite);
-    REGISTER_TEST(DataStream_MultipleRead);
+    REGISTER_TEST(DataStreamTest_PushPop_I32);
+    REGISTER_TEST(DataStreamTest_PushPop_U32);
+    REGISTER_TEST(DataStreamTest_PushPop_Str);
+    REGISTER_TEST(DataStreamTest_ReadWrite);
+    REGISTER_TEST(DataStreamTest_MultipleRead);
+    REGISTER_TEST(DataStreamTest_Append);
 
     registerUtilAsyncTests();
     registerUtilDataStructTests();

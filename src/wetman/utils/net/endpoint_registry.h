@@ -1,7 +1,7 @@
 #ifndef WETMAN_UTILS_NET_ENDPOINT_REGISTRY_H
 #define WETMAN_UTILS_NET_ENDPOINT_REGISTRY_H
 
-#include <wetman/utils/data_struct/str.h>
+#include <wetman/utils/data_stream.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/endpoint.h>
 #include <wetman/utils/net/return_code.h>
@@ -19,10 +19,10 @@ typedef struct {
 
 EndpointRegistry EndpointRegistry_New(void);
 void EndpointRegistry_RegisterEndpoint(EndpointRegistry* endpointRegistry, Endpoint endpoint);
-ReturnCode EndpointRegistry_CallEndpoint(
+DataStream EndpointRegistry_CallEndpoint(
         EndpointRegistry* endpointRegistry,
         EndpointId        endpointId,
         Arena*            arena,
-        Str               data);
+        DataStream*       requestData);
 
 #endif // WETMAN_UTILS_NET_ENDPOINT_REGISTRY_H

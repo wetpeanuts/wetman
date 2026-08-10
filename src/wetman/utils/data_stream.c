@@ -69,6 +69,12 @@ void DataStream_Write(DataStream* dataStream, int fd)
     dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
 }
 
+void DataStream_Append(DataStream* dest, const DataStream* src, Arena* arena)
+{
+    dest->__data = Str_Concat(dest->__data, src->__data, arena);
+    dest->lastResult = DATA_STREAM_RESULT_SUCCESS;
+}
+
 void DataStream_PushI32(DataStream* dataStream, i32 value, Arena* arena)
 {
     usize const dataLen = sizeof(i32) + sizeof(i32);

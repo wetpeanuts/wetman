@@ -5,7 +5,7 @@
 #include <fcntl.h>
 
 
-TEST(DataStream_PushPop_I32)
+TEST(DataStreamTest_PushPop_I32)
 {
     Arena arena = Arena_New();
     i32 value1 = 42;
@@ -43,7 +43,7 @@ TEST(DataStream_PushPop_I32)
     Arena_Free(&arena);
 }
 
-TEST(DataStream_PushPop_U32)
+TEST(DataStreamTest_PushPop_U32)
 {
     Arena arena = Arena_New();
     u32 value1 = 42;
@@ -81,7 +81,7 @@ TEST(DataStream_PushPop_U32)
     Arena_Free(&arena);
 }
 
-TEST(DataStream_PushPop_Str)
+TEST(DataStreamTest_PushPop_Str)
 {
     Arena arena = Arena_New();
     Str value1 = Str_FromCStr("Hello");
@@ -119,7 +119,7 @@ TEST(DataStream_PushPop_Str)
     Arena_Free(&arena);
 }
 
-TEST(DataStream_ReadWrite)
+TEST(DataStreamTest_ReadWrite)
 {
     i32 fdTmp = CREATE_TMP_FILE(O_RDWR | O_CREAT | O_TRUNC);
 
@@ -156,7 +156,7 @@ TEST(DataStream_ReadWrite)
     Arena_Free(&arena);
 }
 
-TEST(DataStream_MultipleRead)
+TEST(DataStreamTest_MultipleRead)
 {
     i32 fdTmp = CREATE_TMP_FILE(O_RDWR | O_CREAT | O_TRUNC);
 
@@ -200,3 +200,32 @@ TEST(DataStream_MultipleRead)
 
     Arena_Free(&arena);
 }
+
+TEST(DataStreamTest_Append)
+{
+    Arena arena = Arena_New();
+    i32 value1 = 42;
+    u32 value2 = 24;
+
+    DataStream dataStream1 = DataStream_New();
+    DataStream_PushI32(&dataStream1, value1, &arena);
+    ASSERT_EQ(dataStream1.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream dataStream2 = DataStream_New();
+    DataStream_PushU32(&dataStream2, value2, &arena);
+    ASSERT_EQ(dataStream2.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream_Append(&dataStream1, &dataStream2, &arena);
+
+    i32 deserializedValue1 = DataStream_PopI32(&dataStream1);
+    ASSERT_EQ(dataStream1.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    u32 deserializedValue2 = DataStream_PopU32(&dataStream1);
+    ASSERT_EQ(dataStream1.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    EXPECT_EQ(deserializedValue1, value1);
+    EXPECT_EQ(deserializedValue2, value2);
+
+    Arena_Free(&arena);
+}
+
