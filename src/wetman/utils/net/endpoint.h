@@ -6,7 +6,7 @@
 #include <wetman/utils/net/return_code.h>
 
 
-typedef int EndpointId;
+typedef i32 EndpointId;
 typedef ReturnCode(*EndpointHandler)(void*,void*);
 typedef void*(*EndpointRequestParser)(Arena*,Str);
 typedef void*(*EndpointResponseFactory)(Arena*);

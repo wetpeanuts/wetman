@@ -35,17 +35,19 @@ DataStream DataStream_WithData(DataSlice data)
     return dataStream;
 }
 
-DataStream DataStream_Read(int fd, Arena* arena)
+DataStream DataStream_Read(int fd, Arena* arena, isize maxLen)
 {
     DataSlice data = Str_FromCStr("");
     char buf[__DATA_STREAM_BUF_LEN];
+    isize readLen = 0;
 
-    while (TRUE) {
-        isize chunkLen = read(fd, buf, __DATA_STREAM_BUF_LEN);
+    while (readLen < maxLen) {
+        isize chunkLen = read(fd, buf, MIN(__DATA_STREAM_BUF_LEN, maxLen - readLen));
         if (chunkLen <= 0) {
             break;
         }
 
+        readLen += chunkLen;
         DataSlice dataChunk = {
             .data = buf,
             .len  = chunkLen,

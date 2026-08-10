@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#define SOCKET_PATH "/tmp/my_socket"
+#define SOCKET_PATH "/tmp/wetman_server.sock"
 
 int main(void)
 {

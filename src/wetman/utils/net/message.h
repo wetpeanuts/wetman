@@ -7,8 +7,12 @@
 #include <wetman/utils/net/endpoint.h>
 
 
+#define REQUEST_HEADER_SERIALIZED_LEN (2 * sizeof(i32) + sizeof(RequestHeader))
+#define RESPONSE_HEADER_SERIALIZED_LEN (2 * sizeof(i32) + sizeof(ResponseHeader))
+
 typedef struct {
     EndpointId endpointId;
+    u32        msgLen;
 } RequestHeader;
 
 void RequestHeader_Serialize(
@@ -19,6 +23,7 @@ RequestHeader RequestHeader_Deserialize(DataStream* dataStream);
 
 typedef struct {
     i32 returnCode;
+    u32 msgLen;
 } ResponseHeader;
 
 void ResponseHeader_Serialize(

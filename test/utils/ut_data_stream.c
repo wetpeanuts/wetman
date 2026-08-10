@@ -141,7 +141,7 @@ TEST(DataStream_ReadWrite)
     // Reset file offset after write
     ASSERT(lseek(fdTmp, 0, SEEK_SET) != (off_t)-1);
 
-    dataStream = DataStream_Read(fdTmp, &arena);
+    dataStream = DataStream_Read(fdTmp, &arena, 256);
     ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
 
     Str deserializedValue1 = DataStream_PopStr(&dataStream);
@@ -151,6 +151,51 @@ TEST(DataStream_ReadWrite)
     ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
 
     EXPECT(Str_EqStr(deserializedValue1, value1));
+    EXPECT_EQ(deserializedValue2, value2);
+
+    Arena_Free(&arena);
+}
+
+TEST(DataStream_MultipleRead)
+{
+    i32 fdTmp = CREATE_TMP_FILE(O_RDWR | O_CREAT | O_TRUNC);
+
+    Arena      arena      = Arena_New();
+    DataStream dataStream = DataStream_New();
+
+    i32 value1 = 24;
+    i32 value2 = 42;
+
+    DataStream_PushI32(&dataStream, value1, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream_PushI32(&dataStream, value2, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream_Write(&dataStream, fdTmp);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Reset file offset after write
+    ASSERT(lseek(fdTmp, 0, SEEK_SET) != (off_t)-1);
+
+    // Read 0 bytes always succed
+    dataStream = DataStream_Read(fdTmp, &arena, 0);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Serialized type index + actual value
+    dataStream = DataStream_Read(fdTmp, &arena, sizeof(i32) * 2);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    i32 deserializedValue1 = DataStream_PopI32(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    dataStream = DataStream_Read(fdTmp, &arena, sizeof(i32) * 2);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    i32 deserializedValue2 = DataStream_PopI32(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    EXPECT_EQ(deserializedValue1, value1);
     EXPECT_EQ(deserializedValue2, value2);
 
     Arena_Free(&arena);

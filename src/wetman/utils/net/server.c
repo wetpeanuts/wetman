@@ -59,6 +59,26 @@ int __Server_CreateSocket(const char* socketPath)
     return fdServer;
 }
 
+void __Server_WriteEmptyResponse(
+        u32    fdClient,
+        i32    returnCode,
+        Arena* arena)
+{
+    ResponseHeader responseHeader = {
+        .returnCode = returnCode,
+        .msgLen     = 0,
+    };
+
+    DataStream dsResponse = DataStream_New();
+    ResponseHeader_Serialize(&responseHeader, &dsResponse, arena);
+
+    DataStream_Write(&dsResponse, fdClient);
+
+    close(fdClient);
+    printf("Client disconnected\n");
+    return;
+}
+
 typedef struct {
     EventLoop*        eventLoop;
     Arena*            arena;
@@ -77,26 +97,32 @@ void __Server_Main(__ServerMainContext* mainContext)
 
     printf("Client connected\n");
 
-    DataStream dsRequest = DataStream_Read(fdClient, mainContext->arena);
-    printf("Received %lu bytes\n", dsRequest.__data.len);
+    // Process request header
+    DataStream dsRequest = DataStream_Read(fdClient, mainContext->arena, REQUEST_HEADER_SERIALIZED_LEN);
+    printf("Read request header: %lu bytes\n", dsRequest.__data.len);
 
     RequestHeader requestHeader = RequestHeader_Deserialize(&dsRequest);
     if (dsRequest.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         fprintf(stderr, "Failed to parse data stream. Last error: %d\n", dsRequest.lastResult);
-        ResponseHeader responseHeader = {
-            .returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST,
-        };
-
-        DataStream dsResponse = DataStream_New();
-        ResponseHeader_Serialize(&responseHeader, &dsResponse, mainContext->arena);
-
-        DataStream_Write(&dsResponse, fdClient);
-
-        close(fdClient);
-        printf("Client disconnected\n");
+        __Server_WriteEmptyResponse(
+                fdClient,
+                RETURN_CODE_FAILED_TO_PARSE_REQUEST,
+                mainContext->arena);
         return;
     }
 
+    // Process request body
+    dsRequest = DataStream_Read(fdClient, mainContext->arena, requestHeader.msgLen);
+    printf("Read request body: %lu bytes\n", dsRequest.__data.len);
+
+    // if (dsRequest.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    //     fprintf(stderr, "Failed to parse data stream. Last error: %d\n", dsRequest.lastResult);
+    //     __Server_WriteEmptyResponse(
+    //             fdClient,
+    //             RETURN_CODE_FAILED_TO_PARSE_REQUEST,
+    //             mainContext->arena);
+    //     return;
+    // }
     printf("Calling endpoint %d", requestHeader.endpointId);
 
     // MAYBE_UNUSED ReturnCode code = EndpointRegistry_CallEndpoint(
@@ -107,6 +133,7 @@ void __Server_Main(__ServerMainContext* mainContext)
 
     ResponseHeader responseHeader = {
         .returnCode = RETURN_CODE_OK,
+        .msgLen     = 0,
     };
 
     DataStream dsResponse = DataStream_New();
@@ -135,8 +162,7 @@ void __Server_MainIter(Callback* callbackMeta)
 
 int Server_Run(const char* socketPath, EndpointRegistry* endpointRegistry)
 {
-    int fdServer = __Server_CreateSocket(socketPath);
-
+    int       fdServer  = __Server_CreateSocket(socketPath);
     Arena     mainArena = Arena_New();
     EventLoop mainLoop  = EventLoop_New();
 

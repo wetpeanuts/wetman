@@ -15,6 +15,7 @@ void registerUtilTests(void)
     REGISTER_TEST(DataStream_PushPop_U32);
     REGISTER_TEST(DataStream_PushPop_Str);
     REGISTER_TEST(DataStream_ReadWrite);
+    REGISTER_TEST(DataStream_MultipleRead);
 
     registerUtilAsyncTests();
     registerUtilDataStructTests();
