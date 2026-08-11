@@ -45,7 +45,7 @@ void TestEndpointResponseDeserializer(TestEndpointResponse* resp, DataStream* ds
 
 #define TEST_ENDPOINT_ID 0
 
-DELCARE_ENDPOINT(TEST_ENDPOINT_ID, TestEndpoint)
+ENDPOINT_IMPL(TEST_ENDPOINT_ID, TestEndpoint)
 
 
 TEST(EndpointRegistryTest_New)

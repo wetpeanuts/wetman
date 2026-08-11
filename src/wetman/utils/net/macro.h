@@ -3,7 +3,30 @@
 
 #include <wetman/utils/net/endpoint.h>
 
-#define DELCARE_ENDPOINT(endpointId, endpointName) \
+#define ENDPOINT_DECLARE(endpointName) \
+    ReturnCode endpointName( \
+            endpointName##Request* request, \
+            endpointName##Response* response); \
+    \
+    void endpointName##RequestSerializer( \
+            endpointName##Request* request, \
+            DataStream*            dataStream, \
+            Arena*                 arena); \
+    void endpointName##RequestDeserializer( \
+            endpointName##Request* request, \
+            DataStream*            dataStream); \
+    \
+    void endpointName##ResponseSerializer( \
+            endpointName##Response* response, \
+            DataStream*             dataStream, \
+            Arena*                  arena); \
+    void endpointName##ResponseDeserializer( \
+            endpointName##Response* response, \
+            DataStream*             dataStream); \
+    \
+    Endpoint endpointName##_Create(void);
+
+#define ENDPOINT_IMPL(endpointId, endpointName) \
     ReturnCode __Endpoint_##endpointName(void* request, void* response) { \
         return endpointName( \
                 (endpointName##Request*)request, \

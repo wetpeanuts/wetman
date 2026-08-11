@@ -3,4 +3,6 @@
 
 #include <wetman/utils/mod.c>
 
-#endif // WETMAN_SERVER_MOD_C 
+#include <wetman/server/endpoint/mod.c>
+
+#endif // WETMAN_SERVER_MOD_C
