@@ -1,10 +1,16 @@
 #include <wetman/utils/test/macro.h>
 
+#include "ut_client.c"
 #include "ut_endpoint_registry.c"
 #include "ut_message.c"
 
 void registerUtilNetTests(void)
 {
+    REGISTER_TEST(ClientCallTest_Ok);
+    REGISTER_TEST(ClientCallTest_ErrorCode);
+    REGISTER_TEST(ClientCallTest_TransportError);
+    REGISTER_TEST(ClientCallTest_InvalidResponse);
+
     REGISTER_TEST(EndpointRegistryTest_New);
     REGISTER_TEST(EndpointRegistryTest_RegisterEndpoint);
     REGISTER_TEST(EndpointRegistryTest_CallEndpoint_Success);

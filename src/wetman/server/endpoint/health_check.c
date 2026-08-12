@@ -1,5 +1,7 @@
 #include <wetman/server/endpoint/health_check.h>
 
+#include <wetman/shared/endpoint/id.h>
+
 #include <wetman/utils/net/macro.h>
 
 
@@ -13,40 +15,4 @@ ReturnCode Endpoint_HealthCheck(
     return RETURN_CODE_OK;
 }
 
-void Endpoint_HealthCheckRequestSerializer(
-        Endpoint_HealthCheckRequest* request,
-        DataStream*                  dataStream,
-        Arena*                       arena)
-{
-    (void)request;
-    (void)dataStream;
-    (void)arena;
-}
-
-void Endpoint_HealthCheckRequestDeserializer(
-        Endpoint_HealthCheckRequest* request,
-        DataStream*                  dataStream)
-{
-    (void)request;
-    (void)dataStream;
-}
-
-void Endpoint_HealthCheckResponseSerializer(
-        Endpoint_HealthCheckResponse* response,
-        DataStream*                   dataStream,
-        Arena*                        arena)
-{
-    (void)response;
-    (void)dataStream;
-    (void)arena;
-}
-
-void Endpoint_HealthCheckResponseDeserializer(
-        Endpoint_HealthCheckResponse* response,
-        DataStream*                   dataStream)
-{
-    (void)response;
-    (void)dataStream;
-}
-
-ENDPOINT_IMPL(0, Endpoint_HealthCheck)
+ENDPOINT_IMPL_SERVER(ENDPOINT_ID_HEALTH_CHECK, Endpoint_HealthCheck)

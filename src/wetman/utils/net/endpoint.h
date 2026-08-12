@@ -30,4 +30,9 @@ typedef struct {
     EndpointResponseFactory      responseFactory;
 } Endpoint;
 
+DataStream Endpoint_Call(
+        Endpoint*   endpoint,
+        Arena*      arena,
+        DataStream* requestData);
+
 #endif // WETMAN_UTILS_NET_ENDPOINT_H

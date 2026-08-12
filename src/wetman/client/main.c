@@ -1,31 +1,23 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/un.h>
+
+#include <wetman/client/endpoint/health_check.h>
+#include <wetman/utils/net/client.h>
+
+#include <wetman/client/mod.c>
+
 
 #define SOCKET_PATH "/tmp/wetman_server.sock"
 
 int main(void)
 {
-    int fd;
-    struct sockaddr_un addr;
-    char buf[128];
+    Client client = Client_New(SOCKET_PATH);
 
-    fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    Endpoint_HealthCheckRequest request = { 0 };
+    Endpoint_HealthCheckResponse response = { 0 };
 
-    memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, SOCKET_PATH);
+    ReturnCode returnCode = Endpoint_HealthCheck_Call(&client, &request, &response);
 
-    connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+    printf("Health check returned status code: %d\n", returnCode);
 
-    write(fd, "hello\n", 6);
-
-    int n = read(fd, buf, sizeof(buf)-1);
-    buf[n] = 0;
-
-    printf("Reply: %s", buf);
-
-    close(fd);
+    return (int)returnCode;
 }

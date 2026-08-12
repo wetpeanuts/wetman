@@ -45,7 +45,7 @@ void TestEndpointResponseDeserializer(TestEndpointResponse* resp, DataStream* ds
 
 #define TEST_ENDPOINT_ID 0
 
-ENDPOINT_IMPL(TEST_ENDPOINT_ID, TestEndpoint)
+ENDPOINT_IMPL_SERVER(TEST_ENDPOINT_ID, TestEndpoint)
 
 
 TEST(EndpointRegistryTest_New)

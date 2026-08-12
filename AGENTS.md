@@ -18,6 +18,12 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   from all binaries.
 - Library headers are included as `<wetman/...>`; entrypoints:
   `src/wetman/server/main.c`, `src/wetman/client/main.c`, `test/main.c`.
+- Endpoints are split by namespace: `shared/endpoint/` holds the interface
+  (Request/Response structs + inline serializers), while
+  `server/endpoint/` defines server logic + `ENDPOINT_DECLARE_SERVER` +
+  `ENDPOINT_IMPL_SERVER` and `client/endpoint/` adds `ENDPOINT_DECLARE_CLIENT` +
+  `ENDPOINT_IMPL_CLIENT`. The client binary must include the shared +
+  client endpoint `mod.c` trees to see the serializers.
 
 ## Tests
 - Harness in `src/wetman/utils/test/`. Define tests with `TEST(Name)`; register
@@ -35,4 +41,5 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `isize`) and macros from `macro.h` (`TRUE/FALSE`, `MAX/MIN`, `LIKELY/UNLIKELY`,
   `MAYBE_UNUSED`).
 - Server listens on Unix socket `/tmp/wetman_server.sock`; the client connects
-  to it. Endpoint IDs are plain constants in each `main.c`.
+  to it. Endpoint IDs are `ENDPOINT_ID_*` constants in
+  `src/wetman/shared/endpoint/id.h`, shared by both server and client.

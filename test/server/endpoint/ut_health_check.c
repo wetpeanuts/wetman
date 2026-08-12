@@ -1,4 +1,4 @@
-#include <wetman/server/endpoint/health_check.h>
+#include <wetman/shared/endpoint/health_check.h>
 #include <wetman/utils/net/endpoint_registry.h>
 #include <wetman/utils/net/message.h>
 #include <wetman/utils/test/macro.h>

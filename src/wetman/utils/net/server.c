@@ -115,29 +115,22 @@ void __Server_Main(__ServerMainContext* mainContext)
     dsRequest = DataStream_Read(fdClient, mainContext->arena, requestHeader.msgLen);
     printf("Read request body: %lu bytes\n", dsRequest.__data.len);
 
-    // if (dsRequest.lastResult != DATA_STREAM_RESULT_SUCCESS) {
-    //     fprintf(stderr, "Failed to parse data stream. Last error: %d\n", dsRequest.lastResult);
-    //     __Server_WriteEmptyResponse(
-    //             fdClient,
-    //             RETURN_CODE_FAILED_TO_PARSE_REQUEST,
-    //             mainContext->arena);
-    //     return;
-    // }
-    printf("Calling endpoint %d", requestHeader.endpointId);
+    if (dsRequest.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+        fprintf(stderr, "Failed to parse data stream. Last error: %d\n", dsRequest.lastResult);
+        __Server_WriteEmptyResponse(
+                fdClient,
+                RETURN_CODE_FAILED_TO_PARSE_REQUEST,
+                mainContext->arena);
+        return;
+    }
 
-    // MAYBE_UNUSED ReturnCode code = EndpointRegistry_CallEndpoint(
-    //         mainContext->endpointRegistry,
-    //         messageHeader.endpointId,
-    //         mainContext->arena,
-    //         dataStream.__data); // TODO: pass data stream directly
+    printf("Calling endpoint %d\n", requestHeader.endpointId);
 
-    ResponseHeader responseHeader = {
-        .returnCode = RETURN_CODE_OK,
-        .msgLen     = 0,
-    };
-
-    DataStream dsResponse = DataStream_New();
-    ResponseHeader_Serialize(&responseHeader, &dsResponse, mainContext->arena);
+    DataStream dsResponse = EndpointRegistry_CallEndpoint(
+            mainContext->endpointRegistry,
+            requestHeader.endpointId,
+            mainContext->arena,
+            &dsRequest);
 
     DataStream_Write(&dsResponse, fdClient);
 
