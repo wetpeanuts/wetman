@@ -2,7 +2,7 @@
 
 #include <wetman/shared/endpoint/id.h>
 
-#include <wetman/utils/net/client.h>
+#include <wetman/utils/net/client/client.h>
 #include <wetman/utils/net/macro.h>
 
 

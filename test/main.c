@@ -2,6 +2,7 @@
 
 #include <wetman/utils/mod.c>
 #include <wetman/server/mod.c>
+#include "shared/mod.c"
 #include "utils/mod.c"
 #include "server/mod.c"
 

@@ -1,7 +1,7 @@
 #ifndef WETMAN_UTILS_NET_MACRO_H
 #define WETMAN_UTILS_NET_MACRO_H
 
-#include <wetman/utils/net/client.h>
+#include <wetman/utils/net/client/client.h>
 #include <wetman/utils/net/endpoint.h>
 #include <wetman/utils/net/message.h>
 

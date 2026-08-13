@@ -3,49 +3,8 @@
 #include <wetman/utils/net/message.h>
 #include <wetman/utils/test/macro.h>
 
-#define TEST_ENDPOINT_REQUEST_SERIALIZED_LEN (sizeof(i32) + sizeof(i32))
-#define TEST_ENDPOINT_RESPONSE_SERIALIZED_LEN (sizeof(i32) + sizeof(i32))
-
-typedef struct {
-    i32 dummy;
-} TestEndpointRequest;
-
-typedef struct {
-    i32 dummy;
-} TestEndpointResponse;
-
-
-ReturnCode TestEndpoint(
-        TestEndpointRequest* request,
-        TestEndpointResponse* response)
-{
-    response->dummy = request->dummy;
-    return RETURN_CODE_OK;
-}
-
-void TestEndpointRequestSerializer(TestEndpointRequest* req, DataStream* ds, Arena* arena)
-{
-    DataStream_PushI32(ds, req->dummy, arena);
-}
-
-void TestEndpointRequestDeserializer(TestEndpointRequest* req, DataStream* ds)
-{
-    req->dummy = DataStream_PopI32(ds);
-}
-
-void TestEndpointResponseSerializer(TestEndpointResponse* resp, DataStream* ds, Arena* arena)
-{
-    DataStream_PushI32(ds, resp->dummy, arena);
-}
-
-void TestEndpointResponseDeserializer(TestEndpointResponse* resp, DataStream* ds)
-{
-    resp->dummy = DataStream_PopI32(ds);
-}
-
-#define TEST_ENDPOINT_ID 0
-
-ENDPOINT_IMPL_SERVER(TEST_ENDPOINT_ID, TestEndpoint)
+#include "../../shared/endpoint/id.h"
+#include "../../shared/endpoint/echo_i32.h"
 
 
 TEST(EndpointRegistryTest_New)
@@ -68,18 +27,18 @@ TEST(EndpointRegistryTest_RegisterEndpoint)
 {
     EndpointRegistry node = EndpointRegistry_New();
 
-    Endpoint endpoint = TestEndpoint_Create();
+    Endpoint endpoint = TestEndpointEchoI32_Create();
     EndpointRegistry_RegisterEndpoint(&node, endpoint);
 
     EXPECT_EQ(node.__endpointCount, 1);
-    EXPECT_EQ(node.__endpoints[0].id, 0);
-    EXPECT_NE(node.__endpoints[0].handler, NULL);
-    EXPECT_NE(node.__endpoints[0].requestSerializer, NULL);
-    EXPECT_NE(node.__endpoints[0].requestDeserializer, NULL);
-    EXPECT_NE(node.__endpoints[0].requestFactory, NULL);
-    EXPECT_NE(node.__endpoints[0].responseSerializer, NULL);
-    EXPECT_NE(node.__endpoints[0].responseDeserializer, NULL);
-    EXPECT_NE(node.__endpoints[0].responseFactory, NULL);
+    EXPECT_EQ(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].id, TEST_ENDPOINT_ID_ECHO_I32);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].handler, NULL);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestSerializer, NULL);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestDeserializer, NULL);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestFactory, NULL);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseSerializer, NULL);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseDeserializer, NULL);
+    EXPECT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseFactory, NULL);
 
     // TODO: test register invalid endpoint
 }
@@ -88,36 +47,37 @@ TEST(EndpointRegistryTest_CallEndpoint_Success)
 {
     EndpointRegistry node = EndpointRegistry_New();
 
-    Endpoint endpoint = TestEndpoint_Create();
+    Endpoint endpoint = TestEndpointEchoI32_Create();
     EndpointRegistry_RegisterEndpoint(&node, endpoint);
 
     ASSERT_EQ(node.__endpointCount, 1);
-    ASSERT_EQ(node.__endpoints[0].id, 0);
-    ASSERT_NE(node.__endpoints[0].handler, NULL);
-    ASSERT_NE(node.__endpoints[0].requestSerializer, NULL);
-    ASSERT_NE(node.__endpoints[0].requestDeserializer, NULL);
-    ASSERT_NE(node.__endpoints[0].requestFactory, NULL);
-    ASSERT_NE(node.__endpoints[0].responseSerializer, NULL);
-    ASSERT_NE(node.__endpoints[0].responseDeserializer, NULL);
-    ASSERT_NE(node.__endpoints[0].responseFactory, NULL);
+    ASSERT_EQ(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].id, TEST_ENDPOINT_ID_ECHO_I32);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].handler, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestSerializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestDeserializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestFactory, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseSerializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseDeserializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseFactory, NULL);
 
     Arena arena = Arena_New();
-    TestEndpointRequest request = {
-        .dummy = 42,
+    TestEndpointEchoI32Request request = {
+        .value = 42,
     };
     DataStream requestData = DataStream_New();
-    TestEndpointRequestSerializer(&request, &requestData, &arena);
+    TestEndpointEchoI32RequestSerializer(&request, &requestData, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(&node, 0, &arena, &requestData);
+    DataStream responseData = EndpointRegistry_CallEndpoint(
+            &node, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestData);
     ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
 
     ASSERT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     ASSERT_EQ(responseHeader.msgLen, TEST_ENDPOINT_RESPONSE_SERIALIZED_LEN);
 
-    TestEndpointResponse response;
-    TestEndpointResponseDeserializer(&response, &responseData);
+    TestEndpointEchoI32Response response;
+    TestEndpointEchoI32ResponseDeserializer(&response, &responseData);
 
-    EXPECT_EQ(response.dummy, request.dummy);
+    EXPECT_EQ(response.value, request.value);
 
     Arena_Free(&arena);
 }
@@ -127,13 +87,14 @@ TEST(EndpointRegistryTest_CallEndpoint_InvalidEndpoint)
     EndpointRegistry endpointRegistry = EndpointRegistry_New();
 
     Arena arena = Arena_New();
-    TestEndpointRequest request = {
-        .dummy = 42,
+    TestEndpointEchoI32Request request = {
+        .value = 42,
     };
     DataStream requestData = DataStream_New();
-    TestEndpointRequestSerializer(&request, &requestData, &arena);
+    TestEndpointEchoI32RequestSerializer(&request, &requestData, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(&endpointRegistry, 0, &arena, &requestData);
+    DataStream responseData = EndpointRegistry_CallEndpoint(
+            &endpointRegistry, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestData);
     ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
 
     ASSERT_EQ(responseHeader.returnCode, RETURN_CODE_ENDPOINT_NOT_INITIALIZED);
@@ -152,24 +113,25 @@ TEST(EndpointRegistryTest_CallEndpoint_ValidEndpoint_InvalidRequest)
 {
     EndpointRegistry node = EndpointRegistry_New();
 
-    Endpoint endpoint = TestEndpoint_Create();
+    Endpoint endpoint = TestEndpointEchoI32_Create();
     EndpointRegistry_RegisterEndpoint(&node, endpoint);
 
     ASSERT_EQ(node.__endpointCount, 1);
-    ASSERT_EQ(node.__endpoints[0].id, 0);
-    ASSERT_NE(node.__endpoints[0].handler, NULL);
-    ASSERT_NE(node.__endpoints[0].requestSerializer, NULL);
-    ASSERT_NE(node.__endpoints[0].requestDeserializer, NULL);
-    ASSERT_NE(node.__endpoints[0].requestFactory, NULL);
-    ASSERT_NE(node.__endpoints[0].responseSerializer, NULL);
-    ASSERT_NE(node.__endpoints[0].responseDeserializer, NULL);
-    ASSERT_NE(node.__endpoints[0].responseFactory, NULL);
+    ASSERT_EQ(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].id, TEST_ENDPOINT_ID_ECHO_I32);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].handler, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestSerializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestDeserializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].requestFactory, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseSerializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseDeserializer, NULL);
+    ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseFactory, NULL);
 
     Arena arena = Arena_New();
     DataStream requestData = DataStream_New();
     DataStream_PushU32(&requestData, 42, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(&node, 0, &arena, &requestData);
+    DataStream responseData = EndpointRegistry_CallEndpoint(
+            &node, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestData);
     ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_FAILED_TO_PARSE_REQUEST);

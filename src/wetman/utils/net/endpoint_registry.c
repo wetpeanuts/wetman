@@ -58,7 +58,7 @@ DataStream EndpointRegistry_CallEndpoint(
         .msgLen     = 0,
     };
 
-    if (0 < endpointId || endpointId >= ENDPOINT_REGISTRY_MAX_ENDPOINT_COUNT) {
+    if (0 > endpointId || endpointId >= ENDPOINT_REGISTRY_MAX_ENDPOINT_COUNT) {
         fprintf(stderr, "Attempt to call endpoint with invalid ID: %d. Available ID range: [0-%d]\n",
                 endpointId, ENDPOINT_REGISTRY_MAX_ENDPOINT_COUNT - 1);
         responseHeader.returnCode = RETURN_CODE_INVALID_ENDPOINT_ID;

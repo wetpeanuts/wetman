@@ -1,5 +1,5 @@
-#ifndef WETMAN_UTILS_NET_CLIENT_H
-#define WETMAN_UTILS_NET_CLIENT_H
+#ifndef WETMAN_UTILS_NET_CLIENT_CLIENT_H
+#define WETMAN_UTILS_NET_CLIENT_CLIENT_H
 
 #include <wetman/utils/data_stream.h>
 #include <wetman/utils/mem/arena.h>
@@ -9,25 +9,21 @@
 
 typedef struct Client Client;
 
-typedef DataStream (*ClientTransportRequest)(
+typedef DataStream (*ClientRequestHandler)(
         Client*     client,
         DataStream* requestData,
         Arena*      arena);
 
-typedef struct {
-    const char* socketPath;
-} ClientUnixTransportContext;
+typedef void(*ClientDisconnectHandler)(Client* client);
 
 struct Client {
-    ClientTransportRequest     request;
-    ClientUnixTransportContext unixContext;
+    Arena                   __arena;
+    ClientRequestHandler    __requestHandler;
+    void*                   __context;
+
+    ClientDisconnectHandler disconnect;
 };
 
-Client Client_New(const char* socketPath);
-DataStream ClientTransport_UnixRequest(
-        Client*     client,
-        DataStream* requestData,
-        Arena*      arena);
 ReturnCode Client_CallEndpoint(
         Client*     client,
         EndpointId  endpointId,
@@ -35,4 +31,4 @@ ReturnCode Client_CallEndpoint(
         DataStream* requestBody,
         DataStream* responseData);
 
-#endif // WETMAN_UTILS_NET_CLIENT_H
+#endif // WETMAN_UTILS_NET_CLIENT_CLIENT_H

@@ -7,12 +7,13 @@
 #include <wetman/utils/net/endpoint.h>
 
 
+// Empty struct is GNU extension
 typedef struct {
-    int dummy;
+    int __dummy;
 } Endpoint_HealthCheckRequest;
 
 typedef struct {
-    int dummy;
+    int __dummy;
 } Endpoint_HealthCheckResponse;
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheckRequestSerializer(

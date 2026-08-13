@@ -24,6 +24,10 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `ENDPOINT_IMPL_SERVER` and `client/endpoint/` adds `ENDPOINT_DECLARE_CLIENT` +
   `ENDPOINT_IMPL_CLIENT`. The client binary must include the shared +
   client endpoint `mod.c` trees to see the serializers.
+- Client transports live in `utils/net/client/`: `UnixClient_Connect(socketPath)`
+  for unix sockets and `EndpointClient_Connect(registry)` for in-process calls.
+  They return a `Client` by value; call `client.disconnect(&client)` to release
+  the client's arena (it is not freed otherwise).
 
 ## Tests
 - Harness in `src/wetman/utils/test/`. Define tests with `TEST(Name)`; register
@@ -31,6 +35,12 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `test/.../mod.c`, chained up to `test/main.c`'s `registerUtilTests()` /
   `registerServerTests()`.
 - New test file: add `#include "ut_x.c"` to the matching `test/.../mod.c`.
+- Shared test endpoints (e.g. `echo_i32`, `echo_str`) live in
+  `test/shared/endpoint/`: structs + inline serializers in `echo_x.h`, server
+  impl + `ENDPOINT_IMPL_SERVER(id, ...)` in `echo_x.c`, ids in `id.h`. Each
+  `echo_x.c` must be added to `mod.c`, and `test/main.c` includes
+  `shared/mod.c` before the utils/server test trees. To call one from a test,
+  generate the client-side `ENDPOINT_IMPL_CLIENT(id, Name)` in the test file.
 - `ASSERT_*` macros abort the test on failure; `EXPECT_*` continue.
 - Tests run inside `.test_wdir/` (gitignored). `CREATE_TMP_FILE(flags)` creates
   files under `tmp_files/`; cleanup is disabled, so they persist after a run.
