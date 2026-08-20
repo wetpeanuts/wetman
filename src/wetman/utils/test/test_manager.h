@@ -11,7 +11,9 @@
 typedef struct {
     const char* cwd;
     const char* tmpFileDir;
+    const char* tmpDirDir;
     u32         tmpFileCount;
+    u32         tmpDirCount;
 } __TestManagerGlobalContext;
 
 typedef struct {
@@ -37,6 +39,12 @@ i32  __TestManager_CreateTmpFile(
         __TestManagerGlobalContext* globalContext,
         __TestCaseContext*          testCaseContext,
         i32                         flags);
+
+// Writes null terminated path to temporary dir into tmpDirPath
+void __TestManager_CreateTmpDir(
+        __TestManagerGlobalContext* globalContext,
+        __TestCaseContext*          testCaseContext,
+        char*                       tmpDirPath);
 
 extern __TestManager __globalTestManager;
 

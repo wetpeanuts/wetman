@@ -101,6 +101,41 @@ TEST(StrTest_FromCStr)
     }
 }
 
+TEST(StrTest_FromU64)
+{
+    typedef struct {
+        u64         value;
+        const char* expected;
+    } TestData;
+
+    TestData testData[] = {
+        {
+            .value    = 0,
+            .expected = "0",
+        },
+        {
+            .value    = 42,
+            .expected = "42",
+        },
+        {
+            .value    = 18446744073709551615ULL,
+            .expected = "18446744073709551615",
+        },
+    };
+
+    Arena arena = Arena_New();
+
+    size_t len = sizeof(testData) / sizeof(testData[0]);
+    for (size_t i = 0; i < len; ++i) {
+        Str str = Str_FromU64(testData[i].value, &arena);
+        EXPECT_EQ(str.len, strlen(testData[i].expected));
+        EXPECT(Str_EqCStr(str, testData[i].expected));
+        Arena_Reset(&arena);
+    }
+
+    Arena_Free(&arena);
+}
+
 TEST(StrTest_Concat)
 {
     typedef struct {

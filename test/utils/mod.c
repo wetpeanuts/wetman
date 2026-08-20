@@ -13,6 +13,7 @@ void registerUtilTests(void)
 {
     REGISTER_TEST(DataStreamTest_PushPop_I32);
     REGISTER_TEST(DataStreamTest_PushPop_U32);
+    REGISTER_TEST(DataStreamTest_PushPop_U64);
     REGISTER_TEST(DataStreamTest_PushPop_Str);
     REGISTER_TEST(DataStreamTest_ReadWrite);
     REGISTER_TEST(DataStreamTest_MultipleRead);

@@ -12,8 +12,8 @@ int main(void)
 {
     Client client = UnixClient_Connect(SOCKET_PATH);
 
-    Endpoint_HealthCheckRequest request = { 0 };
-    Endpoint_HealthCheckResponse response = { 0 };
+    Endpoint_HealthCheck_Request request = { 0 };
+    Endpoint_HealthCheck_Response response = { 0 };
 
     ReturnCode returnCode = Endpoint_HealthCheck_Call(&client, &request, &response);
 

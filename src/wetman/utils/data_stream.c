@@ -13,6 +13,7 @@
 typedef enum {
     DATA_TYPE_I32,
     DATA_TYPE_U32,
+    DATA_TYPE_U64,
     DATA_TYPE_STR,
 } __DataType;
 
@@ -155,6 +156,50 @@ u32 DataStream_PopU32(DataStream* dataStream)
     }
 
     u32 value = *((u32*)(((i32*)dataStream->__data.data) + 1));
+
+    dataStream->__data.data += dataLen;
+    dataStream->__data.len -= dataLen;
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+
+    return value;
+}
+
+void DataStream_PushU64(DataStream* dataStream, u64 value, Arena* arena)
+{
+    usize const dataLen = sizeof(i32) + sizeof(u64);
+    i32* data = (i32*)Arena_Alloc(arena, dataLen);
+    if (!data) {
+        dataStream->lastResult = DATA_STREAM_RESULT_FAILED_ALLOCATE_MEMORY;
+        return;
+    }
+
+    *data = DATA_TYPE_U64;
+    *((u64*)(((i32*)data) + 1)) = value;
+
+    DataSlice serializedValue = {
+        .data = (char*)data,
+        .len  = dataLen,
+    };
+
+    dataStream->__data = Str_Concat(dataStream->__data, serializedValue, arena);
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+}
+
+u64 DataStream_PopU64(DataStream* dataStream)
+{
+    usize const dataLen = sizeof(i32) + sizeof(u64);
+    if (dataStream->__data.len < dataLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return 0;
+    }
+
+    i32 valueType = *((i32*)dataStream->__data.data);
+    if (valueType != DATA_TYPE_U64) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_TYPE;
+        return 0;
+    }
+
+    u64 value = *((u64*)(((i32*)dataStream->__data.data) + 1));
 
     dataStream->__data.data += dataLen;
     dataStream->__data.len -= dataLen;

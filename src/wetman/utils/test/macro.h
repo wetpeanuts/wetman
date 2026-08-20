@@ -17,6 +17,7 @@
 #define RUN_TESTS_IN_WDIR(wdir) __TestManager_RunTests(wdir)
 
 #define CREATE_TMP_FILE(flags) (__TestManager_CreateTmpFile(__testManagerGlobalContext, __testCaseContext, flags))
+#define CREATE_TMP_DIR(tmpPathDir) (__TestManager_CreateTmpDir(__testManagerGlobalContext, __testCaseContext, tmpPathDir))
 
 #define EXPECT_EQ(actual, expected) \
     do { \

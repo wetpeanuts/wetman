@@ -2,5 +2,6 @@
 #define WETMAN_SERVER_ENDPOINT_MOD_C
 
 #include <wetman/server/endpoint/health_check.c>
+#include <wetman/server/endpoint/workspace_init.c>
 
 #endif // WETMAN_SERVER_ENDPOINT_MOD_C

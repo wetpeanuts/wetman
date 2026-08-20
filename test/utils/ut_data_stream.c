@@ -81,6 +81,44 @@ TEST(DataStreamTest_PushPop_U32)
     Arena_Free(&arena);
 }
 
+TEST(DataStreamTest_PushPop_U64)
+{
+    Arena arena = Arena_New();
+    u64 value1 = 42;
+    u64 value2 = 18446744073709551615ULL;
+
+    DataStream dataStream = DataStream_New();
+
+    DataStream_PushU64(&dataStream, value1, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    DataStream_PushU64(&dataStream, value2, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Try read different type
+    {
+        MAYBE_UNUSED u32 _ = DataStream_PopU32(&dataStream);
+        ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_TYPE);
+    }
+
+    u64 deserializedValue1 = DataStream_PopU64(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    u64 deserializedValue2 = DataStream_PopU64(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Try read empty data stream
+    {
+        MAYBE_UNUSED u64 _ = DataStream_PopU64(&dataStream);
+        ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_FORMAT);
+    }
+
+    EXPECT_EQ(deserializedValue1, value1);
+    EXPECT_EQ(deserializedValue2, value2);
+
+    Arena_Free(&arena);
+}
+
 TEST(DataStreamTest_PushPop_Str)
 {
     Arena arena = Arena_New();

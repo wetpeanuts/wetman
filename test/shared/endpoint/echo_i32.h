@@ -10,38 +10,38 @@
 
 typedef struct {
     i32 value;
-} TestEndpointEchoI32Request;
+} TestEndpointEchoI32_Request;
 
 typedef struct {
     i32 value;
-} TestEndpointEchoI32Response;
+} TestEndpointEchoI32_Response;
 
-static inline MAYBE_UNUSED void TestEndpointEchoI32RequestSerializer(
-        TestEndpointEchoI32Request* req,
-        DataStream*                 ds,
-        Arena*                      arena)
+static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestSerializer(
+        TestEndpointEchoI32_Request* req,
+        DataStream*                  ds,
+        Arena*                       arena)
 {
     DataStream_PushI32(ds, req->value, arena);
 }
 
-static inline MAYBE_UNUSED void TestEndpointEchoI32RequestDeserializer(
-        TestEndpointEchoI32Request* req,
-        DataStream*                 ds)
+static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestDeserializer(
+        TestEndpointEchoI32_Request* req,
+        DataStream*                  ds)
 {
     req->value = DataStream_PopI32(ds);
 }
 
-static inline MAYBE_UNUSED void TestEndpointEchoI32ResponseSerializer(
-        TestEndpointEchoI32Response* resp,
-        DataStream*                  ds,
-        Arena*                       arena)
+static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseSerializer(
+        TestEndpointEchoI32_Response* resp,
+        DataStream*                   ds,
+        Arena*                        arena)
 {
     DataStream_PushI32(ds, resp->value, arena);
 }
 
-static inline MAYBE_UNUSED void TestEndpointEchoI32ResponseDeserializer(
-        TestEndpointEchoI32Response* resp,
-        DataStream*                  ds)
+static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseDeserializer(
+        TestEndpointEchoI32_Response* resp,
+        DataStream*                   ds)
 {
     resp->value = DataStream_PopI32(ds);
 }

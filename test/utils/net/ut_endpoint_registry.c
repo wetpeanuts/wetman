@@ -61,11 +61,11 @@ TEST(EndpointRegistryTest_CallEndpoint_Success)
     ASSERT_NE(node.__endpoints[TEST_ENDPOINT_ID_ECHO_I32].responseFactory, NULL);
 
     Arena arena = Arena_New();
-    TestEndpointEchoI32Request request = {
+    TestEndpointEchoI32_Request request = {
         .value = 42,
     };
     DataStream requestData = DataStream_New();
-    TestEndpointEchoI32RequestSerializer(&request, &requestData, &arena);
+    TestEndpointEchoI32_RequestSerializer(&request, &requestData, &arena);
 
     DataStream responseData = EndpointRegistry_CallEndpoint(
             &node, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestData);
@@ -74,8 +74,8 @@ TEST(EndpointRegistryTest_CallEndpoint_Success)
     ASSERT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     ASSERT_EQ(responseHeader.msgLen, TEST_ENDPOINT_RESPONSE_SERIALIZED_LEN);
 
-    TestEndpointEchoI32Response response;
-    TestEndpointEchoI32ResponseDeserializer(&response, &responseData);
+    TestEndpointEchoI32_Response response;
+    TestEndpointEchoI32_ResponseDeserializer(&response, &responseData);
 
     EXPECT_EQ(response.value, request.value);
 
@@ -87,11 +87,11 @@ TEST(EndpointRegistryTest_CallEndpoint_InvalidEndpoint)
     EndpointRegistry endpointRegistry = EndpointRegistry_New();
 
     Arena arena = Arena_New();
-    TestEndpointEchoI32Request request = {
+    TestEndpointEchoI32_Request request = {
         .value = 42,
     };
     DataStream requestData = DataStream_New();
-    TestEndpointEchoI32RequestSerializer(&request, &requestData, &arena);
+    TestEndpointEchoI32_RequestSerializer(&request, &requestData, &arena);
 
     DataStream responseData = EndpointRegistry_CallEndpoint(
             &endpointRegistry, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestData);
