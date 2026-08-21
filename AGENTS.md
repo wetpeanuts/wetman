@@ -24,6 +24,14 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `ENDPOINT_IMPL_SERVER` and `client/endpoint/` adds `ENDPOINT_DECLARE_CLIENT` +
   `ENDPOINT_IMPL_CLIENT`. The client binary must include the shared +
   client endpoint `mod.c` trees to see the serializers.
+- An endpoint only works after it is registered in `server/main.c`
+  (`EndpointRegistry_RegisterEndpoint(&reg, Endpoint_<Name>_Create())`);
+  skipping registration compiles fine but clients get
+  `RETURN_CODE_INVALID_ENDPOINT_ID`.
+- The client binary is a CLI: `client/main.c` dispatches argv into commands
+  (`healthcheck`, `workspace init [-n|--name <name>]`, `-h/--help`). A new
+  command = a branch in `main()` + a static `Run<Command>()` helper there;
+  no mod.c changes needed unless you add new files.
 - Global server state lives in `ServerContext` (`server/context.[ch]`), set up
   via `ServerContext_Init(arena, wdir)` from `server/main.c`; workspaces are
   stored under `<wdir>/workspaces/<id>` and the id counter persists in
