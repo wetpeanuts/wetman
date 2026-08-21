@@ -1,6 +1,7 @@
 #include <wetman/utils/test/macro.h>
 
 #include <wetman/utils/mod.c>
+#include <wetman/shared/mod.c>
 #include <wetman/server/mod.c>
 #include "shared/mod.c"
 #include "utils/mod.c"
@@ -11,6 +12,7 @@ int main(void)
 {
     registerUtilTests();
     registerServerTests();
+    registerSharedTests();
 
     RUN_TESTS_IN_WDIR(".test_wdir");
 }
