@@ -1,9 +1,8 @@
-#include <wetman/shared/endpoint/health_check.h>
+#include <wetman/server/endpoint/health_check.h>
+#include <wetman/shared/endpoint/id.h>
 #include <wetman/utils/net/endpoint_registry.h>
 #include <wetman/utils/net/message.h>
 #include <wetman/utils/test/macro.h>
-
-#define HEALTH_CHECK_ENDPOINT_ID 0
 
 
 TEST(HealthCheckTest_CallEndpoint_Success)
@@ -14,14 +13,14 @@ TEST(HealthCheckTest_CallEndpoint_Success)
     EndpointRegistry_RegisterEndpoint(&endpointRegistry, endpoint);
 
     ASSERT_EQ(endpointRegistry.__endpointCount, 1);
-    ASSERT_EQ(endpointRegistry.__endpoints[0].id, HEALTH_CHECK_ENDPOINT_ID);
+    ASSERT_EQ(endpointRegistry.__endpoints[ENDPOINT_ID_HEALTH_CHECK].id, ENDPOINT_ID_HEALTH_CHECK);
 
     Arena arena = Arena_New();
     DataStream requestData = DataStream_New();
 
     DataStream responseData = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
-            HEALTH_CHECK_ENDPOINT_ID,
+            ENDPOINT_ID_HEALTH_CHECK,
             &arena,
             &requestData);
     ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);

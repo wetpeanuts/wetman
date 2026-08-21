@@ -37,6 +37,9 @@ i32 DataStream_PopI32(DataStream* dataStream);
 void DataStream_PushU32(DataStream* dataStream, u32 value, Arena* arena);
 u32 DataStream_PopU32(DataStream* dataStream);
 
+void DataStream_PushU64(DataStream* dataStream, u64 value, Arena* arena);
+u64 DataStream_PopU64(DataStream* dataStream);
+
 void DataStream_PushStr(DataStream* dataStream, Str value, Arena* arena);
 Str DataStream_PopStr(DataStream* dataStream);
 

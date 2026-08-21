@@ -18,10 +18,10 @@ TEST(EndpointClientTest_EchoStr)
 
     Client client = EndpointClient_Connect(&endpointRegistry);
 
-    TestEndpointEchoStrRequest request = {
+    TestEndpointEchoStr_Request request = {
         .value = Str_FromCStr("hello, endpoint client!"),
     };
-    TestEndpointEchoStrResponse response = {
+    TestEndpointEchoStr_Response response = {
         .value = Str_FromCStr(""),
     };
 

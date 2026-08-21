@@ -19,11 +19,15 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
 - Library headers are included as `<wetman/...>`; entrypoints:
   `src/wetman/server/main.c`, `src/wetman/client/main.c`, `test/main.c`.
 - Endpoints are split by namespace: `shared/endpoint/` holds the interface
-  (Request/Response structs + inline serializers), while
+  (`Endpoint_<Name>_Request`/`_Response` structs + inline serializers), while
   `server/endpoint/` defines server logic + `ENDPOINT_DECLARE_SERVER` +
   `ENDPOINT_IMPL_SERVER` and `client/endpoint/` adds `ENDPOINT_DECLARE_CLIENT` +
   `ENDPOINT_IMPL_CLIENT`. The client binary must include the shared +
   client endpoint `mod.c` trees to see the serializers.
+- Global server state lives in `ServerContext` (`server/context.[ch]`), set up
+  via `ServerContext_Init(arena, wdir)` from `server/main.c`; workspaces are
+  stored under `<wdir>/workspaces/<id>` and the id counter persists in
+  `<wdir>/next_workspace_id`.
 - Client transports live in `utils/net/client/`: `UnixClient_Connect(socketPath)`
   for unix sockets and `EndpointClient_Connect(registry)` for in-process calls.
   They return a `Client` by value; call `client.disconnect(&client)` to release
@@ -43,10 +47,14 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   generate the client-side `ENDPOINT_IMPL_CLIENT(id, Name)` in the test file.
 - `ASSERT_*` macros abort the test on failure; `EXPECT_*` continue.
 - Tests run inside `.test_wdir/` (gitignored). `CREATE_TMP_FILE(flags)` creates
-  files under `tmp_files/`; cleanup is disabled, so they persist after a run.
+  files under `tmp_files/` and `CREATE_TMP_DIR(buf)` makes a fresh directory
+  under `tmp_dirs/`, writing its path into `buf`; cleanup is disabled, so they
+  persist after a run.
 
 ## Conventions
-- Functions are `Module_Action` (e.g. `Arena_New`, `EndpointRegistry_CallEndpoint`).
+- Functions are `Module_Action` (e.g. `Arena_New`, `EndpointRegistry_CallEndpoint`);
+  filesystem helpers use the `FS_` prefix (`filesystem.h`: `FS_PathJoin`,
+  `FS_CreateDir`, `FS_OpenFile`, ...) with paths passed as `Str`.
 - Use aliases from `src/wetman/utils/type.h` (`i8..i64`, `u8..u64`, `usize`,
   `isize`) and macros from `macro.h` (`TRUE/FALSE`, `MAX/MIN`, `LIKELY/UNLIKELY`,
   `MAYBE_UNUSED`).

@@ -13,6 +13,7 @@ typedef struct {
 } Str;
 
 Str Str_FromCStr(const char* str);
+Str Str_FromU64(u64 value, Arena* arena);
 
 int Str_EqStr(Str s1, Str s2);
 int Str_EqCStr(Str s1, const char* s2);

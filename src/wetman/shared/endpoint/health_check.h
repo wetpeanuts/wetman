@@ -10,46 +10,46 @@
 // Empty struct is GNU extension
 typedef struct {
     int __dummy;
-} Endpoint_HealthCheckRequest;
+} Endpoint_HealthCheck_Request;
 
 typedef struct {
     int __dummy;
-} Endpoint_HealthCheckResponse;
+} Endpoint_HealthCheck_Response;
 
-static inline MAYBE_UNUSED void Endpoint_HealthCheckRequestSerializer(
-        Endpoint_HealthCheckRequest* request,
-        DataStream*                  dataStream,
-        Arena*                       arena)
-{
-    (void)request;
-    (void)dataStream;
-    (void)arena;
-}
-
-static inline MAYBE_UNUSED void Endpoint_HealthCheckRequestDeserializer(
-        Endpoint_HealthCheckRequest* request,
-        DataStream*                  dataStream)
-{
-    (void)request;
-    (void)dataStream;
-}
-
-static inline MAYBE_UNUSED void Endpoint_HealthCheckResponseSerializer(
-        Endpoint_HealthCheckResponse* response,
-        DataStream*                   dataStream,
+static inline MAYBE_UNUSED void Endpoint_HealthCheck_RequestSerializer(
+        Endpoint_HealthCheck_Request* req,
+        DataStream*                   ds,
         Arena*                        arena)
 {
-    (void)response;
-    (void)dataStream;
+    (void)req;
+    (void)ds;
     (void)arena;
 }
 
-static inline MAYBE_UNUSED void Endpoint_HealthCheckResponseDeserializer(
-        Endpoint_HealthCheckResponse* response,
-        DataStream*                   dataStream)
+static inline MAYBE_UNUSED void Endpoint_HealthCheck_RequestDeserializer(
+        Endpoint_HealthCheck_Request* req,
+        DataStream*                   ds)
 {
-    (void)response;
-    (void)dataStream;
+    (void)req;
+    (void)ds;
+}
+
+static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseSerializer(
+        Endpoint_HealthCheck_Response* resp,
+        DataStream*                    ds,
+        Arena*                         arena)
+{
+    (void)resp;
+    (void)ds;
+    (void)arena;
+}
+
+static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseDeserializer(
+        Endpoint_HealthCheck_Response* resp,
+        DataStream*                    ds)
+{
+    (void)resp;
+    (void)ds;
 }
 
 #endif // WETMAN_SHARED_ENDPOINT_HEALTH_CHECK_H

@@ -51,13 +51,13 @@ void __setupWorkingDirectory(const char* wdir)
     printf("Test working directory: %s\n", cwd);
 }
 
-void __setupTmpFileDirectory(void)
+void __setupTmpDir(const char* path)
 {
-    if (removeDirectoryRecursive(__globalTestManager.context.tmpFileDir) != 0) {
+    if (FS_RemoveDirectoryRecursive(path) != 0) {
         printf("Error: failed to init tmp file directory");
         exit(1);
     }
-    if (mkdir(__globalTestManager.context.tmpFileDir, 0755) == -1) {
+    if (mkdir(path, 0755) == -1) {
         printf("Error: failed to init tmp file directory");
         exit(1);
     }
@@ -65,7 +65,8 @@ void __setupTmpFileDirectory(void)
 
 void __cleanTestWorkspace(void)
 {
-    if (removeDirectoryRecursive(__globalTestManager.context.tmpFileDir) != 0) {
+    if (FS_RemoveDirectoryRecursive(__globalTestManager.context.tmpFileDir) != 0
+            || FS_RemoveDirectoryRecursive(__globalTestManager.context.tmpDirDir) != 0) {
         printf("Error: failed to clean test workspace");
         exit(1);
     }
@@ -108,7 +109,8 @@ void __TestManager_RegisterTest(__TestCaseHandler test, const char* testName)
 void __TestManager_RunTests(const char* wdir)
 {
     __setupWorkingDirectory(wdir);
-    __setupTmpFileDirectory();
+    __setupTmpDir(__globalTestManager.context.tmpFileDir);
+    __setupTmpDir(__globalTestManager.context.tmpDirDir);
 
     char        statusBuf[256];
     const usize statusBufLen = sizeof(statusBuf);
@@ -174,10 +176,28 @@ i32  __TestManager_CreateTmpFile(
     return open(buf, flags, 0644);
 }
 
+void __TestManager_CreateTmpDir(
+        __TestManagerGlobalContext* globalContext,
+        __TestCaseContext*          testCaseContext,
+        char*                       tmpDirPath)
+{
+    snprintf(tmpDirPath, 256, "%s/%s_tmp_%d",
+            globalContext->tmpDirDir,
+            testCaseContext->testCaseName,
+            globalContext->tmpDirCount++);
+
+    if (mkdir(tmpDirPath, 0755) == -1) {
+        printf("Error: failed to create tmp directory");
+        exit(1);
+    }
+}
+
 __TestManager __globalTestManager = {
     .context         = {
         .tmpFileDir   = "tmp_files",
+        .tmpDirDir    = "tmp_dirs",
         .tmpFileCount = 0,
+        .tmpDirCount  = 0,
     },
     .testCount       = 0,
     .testRunCount    = 0,

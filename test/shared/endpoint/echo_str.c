@@ -3,8 +3,8 @@
 #include "id.h"
 
 ReturnCode TestEndpointEchoStr(
-        TestEndpointEchoStrRequest* request,
-        TestEndpointEchoStrResponse* response)
+        TestEndpointEchoStr_Request*  request,
+        TestEndpointEchoStr_Response* response)
 {
     response->value = request->value;
     return RETURN_CODE_OK;

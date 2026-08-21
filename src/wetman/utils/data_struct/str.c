@@ -13,6 +13,24 @@ Str Str_FromCStr(const char* cStr)
     return str;
 }
 
+Str Str_FromU64(u64 value, Arena* arena)
+{
+    char buf[32];
+    int len = snprintf(buf, sizeof(buf), "%llu", (unsigned long long)value);
+    if (len <= 0) {
+        return Str_FromCStr("");
+    }
+
+    char* data = Arena_Alloc(arena, (usize)len);
+    memcpy(data, buf, (usize)len);
+
+    Str str = {
+        .data = data,
+        .len  = (usize)len,
+    };
+    return str;
+}
+
 int Str_EqStr(Str s1, Str s2)
 {
     if (s1.len != s2.len) {

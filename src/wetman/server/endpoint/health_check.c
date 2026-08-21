@@ -6,8 +6,8 @@
 
 
 ReturnCode Endpoint_HealthCheck(
-        Endpoint_HealthCheckRequest* request,
-        Endpoint_HealthCheckResponse* response)
+        Endpoint_HealthCheck_Request* request,
+        Endpoint_HealthCheck_Response* response)
 {
     (void)request;
     (void)response;

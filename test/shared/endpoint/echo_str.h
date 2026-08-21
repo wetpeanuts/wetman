@@ -7,38 +7,38 @@
 
 typedef struct {
     Str value;
-} TestEndpointEchoStrRequest;
+} TestEndpointEchoStr_Request;
 
 typedef struct {
     Str value;
-} TestEndpointEchoStrResponse;
+} TestEndpointEchoStr_Response;
 
-static inline MAYBE_UNUSED void TestEndpointEchoStrRequestSerializer(
-        TestEndpointEchoStrRequest* req,
-        DataStream*                 ds,
-        Arena*                      arena)
+static inline MAYBE_UNUSED void TestEndpointEchoStr_RequestSerializer(
+        TestEndpointEchoStr_Request* req,
+        DataStream*                  ds,
+        Arena*                       arena)
 {
     DataStream_PushStr(ds, req->value, arena);
 }
 
-static inline MAYBE_UNUSED void TestEndpointEchoStrRequestDeserializer(
-        TestEndpointEchoStrRequest* req,
-        DataStream*                 ds)
+static inline MAYBE_UNUSED void TestEndpointEchoStr_RequestDeserializer(
+        TestEndpointEchoStr_Request* req,
+        DataStream*                  ds)
 {
     req->value = DataStream_PopStr(ds);
 }
 
-static inline MAYBE_UNUSED void TestEndpointEchoStrResponseSerializer(
-        TestEndpointEchoStrResponse* resp,
-        DataStream*                  ds,
-        Arena*                       arena)
+static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseSerializer(
+        TestEndpointEchoStr_Response* resp,
+        DataStream*                   ds,
+        Arena*                        arena)
 {
     DataStream_PushStr(ds, resp->value, arena);
 }
 
-static inline MAYBE_UNUSED void TestEndpointEchoStrResponseDeserializer(
-        TestEndpointEchoStrResponse* resp,
-        DataStream*                  ds)
+static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseDeserializer(
+        TestEndpointEchoStr_Response* resp,
+        DataStream*                   ds)
 {
     resp->value = DataStream_PopStr(ds);
 }
