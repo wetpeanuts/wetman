@@ -6,6 +6,7 @@
 
 #include <wetman/server/endpoint/mod.c>
 
+#include <wetman/server/lock.c>
 #include <wetman/server/context.c>
 
 #endif // WETMAN_SERVER_MOD_C
