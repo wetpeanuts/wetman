@@ -18,6 +18,8 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   from all binaries.
 - Library headers are included as `<wetman/...>`; entrypoints:
   `src/wetman/server/main.c`, `src/wetman/client/main.c`, `test/main.c`.
+  The client binary also includes `shared/mod.c` (for persistence APIs like
+  `WorkspaceConfig_Read` used in CLI commands).
 - Endpoints are split by namespace: `shared/endpoint/` holds the interface
   (`Endpoint_<Name>_Request`/`_Response` structs + inline serializers), while
   `server/endpoint/` defines server logic + `ENDPOINT_DECLARE_SERVER` +
@@ -29,9 +31,10 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   skipping registration compiles fine but clients get
   `RETURN_CODE_INVALID_ENDPOINT_ID`.
 - The client binary is a CLI: `client/main.c` dispatches argv into commands
-  (`healthcheck`, `workspace init [-n|--name <name>]`, `-h/--help`). A new
-  command = a branch in `main()` + a static `Run<Command>()` helper there;
-  no mod.c changes needed unless you add new files.
+   (`healthcheck`, `workspace init [-n|--name <name>]`,
+   `workspace delete [-w|--workspace <id>]`, `-h/--help`). A new
+   command = a branch in `main()` + a static `Run<Command>()` helper there;
+   no mod.c changes needed unless you add new files.
 - Global server state lives in `ServerContext` (`server/context.[ch]`), set up
   via `ServerContext_Init(arena, wdir)` from `server/main.c`; workspaces are
   stored under `<wdir>/workspaces/<id>` and the id counter persists in
