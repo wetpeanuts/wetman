@@ -1,6 +1,7 @@
 #include <wetman/server/endpoint/workspace_init.h>
 #include <wetman/server/context.h>
 #include <wetman/shared/endpoint/id.h>
+#include <wetman/shared/persistence/workspace_config.h>
 #include <wetman/utils/filesystem.h>
 #include <wetman/utils/net/endpoint_registry.h>
 #include <wetman/utils/net/message.h>
@@ -56,9 +57,17 @@ TEST(WorkspaceInitTest_CallEndpoint_Success)
 
     Str workspaceConfigPath = FS_PathJoin(
             wetmanDir,
-            Str_FromCStr("workspace.toml"),
+            Str_FromCStr("workspace.wmwscfg"),
             &arena);
     EXPECT(FS_CheckExists(workspaceConfigPath));
+
+    PersistenceStatus readStatus;
+    WorkspaceConfig readConfig = WorkspaceConfig_Read(
+            workspaceConfigPath, &arena, &readStatus);
+    EXPECT_EQ(readStatus, PERSISTENCE_STATUS_OK);
+    EXPECT_EQ(readConfig.workspaceId, 0);
+    EXPECT_EQ(readConfig.workspaceName.len, 12);
+    EXPECT(Str_EqStr(readConfig.workspaceName, Str_FromCStr("test_project")));
 
     Str serverWorkspaceDir = FS_PathJoin(
             globalServerContext.workspacesPath,
@@ -68,7 +77,7 @@ TEST(WorkspaceInitTest_CallEndpoint_Success)
 
     Str linkedConfigPath = FS_PathJoin(
             serverWorkspaceDir,
-            Str_FromCStr("workspace.toml"),
+            Str_FromCStr("workspace.wmwscfg"),
             &arena);
     EXPECT(FS_CheckExists(linkedConfigPath));
 

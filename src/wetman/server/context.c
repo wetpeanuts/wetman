@@ -98,7 +98,7 @@ usize ServerContext_InitWorkspace(Str workspaceConfigPath, Arena* arena)
 
     Str configLinkPath = FS_PathJoin(
             workspaceDir,
-            Str_FromCStr("workspace.toml"),
+            Str_FromCStr("workspace.wmwscfg"),
             arena);
     MAYBE_UNUSED i32 symlinkResult =
             FS_CreateSymlink(workspaceConfigPath, configLinkPath);

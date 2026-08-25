@@ -22,7 +22,7 @@ TEST(ServerContextTest_InitWorkspace_CreatesDirAndSymlink)
     Str projectPath = Str_FromCStr(projectDir);
     Str wetmanDir = FS_PathJoin(projectPath, Str_FromCStr(".wetman"), &projectArena);
     FS_CreateDir(wetmanDir);
-    Str configPath = FS_PathJoin(wetmanDir, Str_FromCStr("workspace.toml"), &projectArena);
+    Str configPath = FS_PathJoin(wetmanDir, Str_FromCStr("workspace.wmwscfg"), &projectArena);
     i32 fd = FS_OpenFile(configPath, O_WRONLY | O_CREAT);
     ASSERT_NE(fd, -1);
     close(fd);
@@ -38,7 +38,7 @@ TEST(ServerContextTest_InitWorkspace_CreatesDirAndSymlink)
 
     Str configLinkPath = FS_PathJoin(
             workspaceDir,
-            Str_FromCStr("workspace.toml"),
+            Str_FromCStr("workspace.wmwscfg"),
             &arena);
     EXPECT(FS_CheckExists(configLinkPath));
 
