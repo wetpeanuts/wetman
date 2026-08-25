@@ -9,6 +9,7 @@
 typedef struct {
     usize             workspaceId;
     Str               workspaceName;
+    Str               workspacePath;
 } WorkspaceConfig;
 
 

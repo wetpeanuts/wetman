@@ -57,6 +57,7 @@ ReturnCode Endpoint_WorkspaceInit(
     WorkspaceConfig config = {
         .workspaceId   = response->workspaceId,
         .workspaceName = request->workspaceName,
+        .workspacePath = request->workspacePath,
     };
 
     PersistenceStatus status = WorkspaceConfig_Write(workspaceConfigPath, &config);

@@ -3,5 +3,6 @@
 
 #include <wetman/server/endpoint/health_check.c>
 #include <wetman/server/endpoint/workspace_init.c>
+#include <wetman/server/endpoint/workspace_delete.c>
 
 #endif // WETMAN_SERVER_ENDPOINT_MOD_C

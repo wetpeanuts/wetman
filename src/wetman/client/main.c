@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <wetman/client/endpoint/health_check.h>
 #include <wetman/client/endpoint/workspace_init.h>
+#include <wetman/client/endpoint/workspace_delete.h>
+#include <wetman/shared/persistence/workspace_config.h>
 #include <wetman/utils/data_struct/str.h>
+#include <wetman/utils/filesystem.h>
 #include <wetman/utils/net/client/unix_client.h>
 
 #include <wetman/client/mod.c>
@@ -21,10 +25,12 @@ static void PrintUsage(FILE* out)
             "Commands:\n"
             "  healthcheck              Check server health\n"
             "  workspace init           Initialize a workspace in the current directory\n"
+            "  workspace delete         Delete the current workspace\n"
             "\n"
             "Options:\n"
-            "  -n, --name <name>  Workspace name (default: current directory name)\n"
-            "  -h, --help         Show this help message and exit\n");
+            "  -n, --name <name>        Workspace name (default: current directory name)\n"
+            "  -w, --workspace <id>     Workspace id to delete\n"
+            "  -h, --help               Show this help message and exit\n");
 }
 
 static int RunHealthCheck(void)
@@ -117,6 +123,85 @@ static int RunWorkspaceInitCommand(int argc, char** argv)
     return RunWorkspaceInit(name);
 }
 
+static int RunWorkspaceDelete(size_t workspaceId)
+{
+    Client client = UnixClient_Connect(SOCKET_PATH);
+
+    Endpoint_WorkspaceDelete_Request request = {
+            .workspaceId = workspaceId,
+    };
+    Endpoint_WorkspaceDelete_Response response = { 0 };
+
+    ReturnCode returnCode = Endpoint_WorkspaceDelete_Call(&client, &request, &response);
+
+    client.disconnect(&client);
+
+    if (returnCode != RETURN_CODE_OK) {
+        fprintf(stderr,
+                "Workspace delete failed with status code: %d\n",
+                (int)returnCode);
+        return (int)returnCode;
+    }
+
+    printf("Workspace %llu deleted\n",
+            (unsigned long long)response.workspaceId);
+
+    return (int)returnCode;
+}
+
+static int RunWorkspaceDeleteCommand(int argc, char** argv)
+{
+    const char* workspaceIdStr = NULL;
+
+    for (int i = 3; i < argc; ++i) {
+        if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--workspace") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Missing value for option: %s\n", argv[i]);
+                PrintUsage(stderr);
+                return 1;
+            }
+            workspaceIdStr = argv[++i];
+        } else {
+            fprintf(stderr, "Unknown option: %s\n", argv[i]);
+            PrintUsage(stderr);
+            return 1;
+        }
+    }
+
+    if (workspaceIdStr != NULL) {
+        return RunWorkspaceDelete((size_t)strtoull(workspaceIdStr, NULL, 10));
+    }
+
+    char cwd[CWD_BUFFER_SIZE];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        fprintf(stderr, "Failed to get current working directory\n");
+        return 1;
+    }
+
+    Arena arena = Arena_New();
+    Str wetmanDir = FS_PathJoin(Str_FromCStr(cwd), Str_FromCStr(".wetman"), &arena);
+    Str configPath = FS_PathJoin(wetmanDir, Str_FromCStr("workspace.wmwscfg"), &arena);
+
+    if (!FS_CheckExists(configPath)) {
+        fprintf(stderr, "No workspace found in current directory\n");
+        Arena_Free(&arena);
+        return 1;
+    }
+
+    PersistenceStatus status;
+    WorkspaceConfig config = WorkspaceConfig_Read(configPath, &arena, &status);
+    if (status != PERSISTENCE_STATUS_OK) {
+        fprintf(stderr, "Failed to read workspace config\n");
+        Arena_Free(&arena);
+        return 1;
+    }
+
+    size_t workspaceId = config.workspaceId;
+    Arena_Free(&arena);
+
+    return RunWorkspaceDelete(workspaceId);
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 2 ||
@@ -133,6 +218,9 @@ int main(int argc, char** argv)
     if (strcmp(argv[1], "workspace") == 0) {
         if (argc >= 3 && strcmp(argv[2], "init") == 0) {
             return RunWorkspaceInitCommand(argc, argv);
+        }
+        if (argc >= 3 && strcmp(argv[2], "delete") == 0) {
+            return RunWorkspaceDeleteCommand(argc, argv);
         }
         PrintUsage(stderr);
         return 1;

@@ -27,6 +27,7 @@ WorkspaceConfig WorkspaceConfig_Read(
 
     config.workspaceId   = DataStream_PopU64(&dataStream);
     config.workspaceName = DataStream_PopStr(&dataStream);
+    config.workspacePath = DataStream_PopStr(&dataStream);
     if (dataStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         *status = PERSISTENCE_STATUS_WRONG_FORMAT;
         return config;
@@ -50,6 +51,7 @@ PersistenceStatus WorkspaceConfig_Write(
 
     DataStream_PushU64(&dataStream, config->workspaceId, &arena);
     DataStream_PushStr(&dataStream, config->workspaceName, &arena);
+    DataStream_PushStr(&dataStream, config->workspacePath, &arena);
 
     DataStream_Write(&dataStream, fd);
 
