@@ -4,8 +4,6 @@
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/type.h>
 
-#include <stdint.h>
-
 
 typedef struct {
     const char* data;
