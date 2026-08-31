@@ -267,3 +267,110 @@ TEST(DataStreamTest_Append)
     Arena_Free(&arena);
 }
 
+TEST(DataStreamTest_PushPop_SliceI32)
+{
+    Arena arena = Arena_New();
+
+    i32 items[] = { 10, -20, 30 };
+    SliceI32 slice = SliceI32_FromData(items, 3);
+
+    DataStream dataStream = DataStream_New();
+
+    DataStream_PushSliceI32(&dataStream, slice, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Try read different type
+    {
+        MAYBE_UNUSED SliceStr _ = DataStream_PopSliceStr(&dataStream, &arena);
+        ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_TYPE);
+    }
+
+    SliceI32 deserialized = DataStream_PopSliceI32(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    ASSERT_EQ(deserialized.len, 3);
+    EXPECT_EQ(*SliceI32_At(&deserialized, 0), 10);
+    EXPECT_EQ(*SliceI32_At(&deserialized, 1), -20);
+    EXPECT_EQ(*SliceI32_At(&deserialized, 2), 30);
+
+    // Try read empty data stream
+    {
+        MAYBE_UNUSED SliceI32 _ = DataStream_PopSliceI32(&dataStream);
+        ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_FORMAT);
+    }
+
+    Arena_Free(&arena);
+}
+
+TEST(DataStreamTest_PushPop_SliceI32_Empty)
+{
+    Arena arena = Arena_New();
+
+    SliceI32 slice = SliceI32_CreateEmpty();
+
+    DataStream dataStream = DataStream_New();
+
+    DataStream_PushSliceI32(&dataStream, slice, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    SliceI32 deserialized = DataStream_PopSliceI32(&dataStream);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    EXPECT_EQ(deserialized.len, 0);
+
+    Arena_Free(&arena);
+}
+
+TEST(DataStreamTest_PushPop_SliceStr)
+{
+    Arena arena = Arena_New();
+
+    Str items[] = { Str_FromCStr("hello"), Str_FromCStr("world") };
+    SliceStr slice = SliceStr_FromData(items, 2);
+
+    DataStream dataStream = DataStream_New();
+
+    DataStream_PushSliceStr(&dataStream, slice, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    // Try read different type
+    {
+        MAYBE_UNUSED SliceI32 _ = DataStream_PopSliceI32(&dataStream);
+        ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_TYPE);
+    }
+
+    SliceStr deserialized = DataStream_PopSliceStr(&dataStream, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    ASSERT_EQ(deserialized.len, 2);
+    EXPECT(Str_EqStr(*SliceStr_At(&deserialized, 0), Str_FromCStr("hello")));
+    EXPECT(Str_EqStr(*SliceStr_At(&deserialized, 1), Str_FromCStr("world")));
+
+    // Try read empty data stream
+    {
+        MAYBE_UNUSED SliceStr _ = DataStream_PopSliceStr(&dataStream, &arena);
+        ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_WRONG_VALUE_FORMAT);
+    }
+
+    Arena_Free(&arena);
+}
+
+TEST(DataStreamTest_PushPop_SliceStr_Empty)
+{
+    Arena arena = Arena_New();
+
+    SliceStr slice = SliceStr_CreateEmpty();
+
+    DataStream dataStream = DataStream_New();
+
+    DataStream_PushSliceStr(&dataStream, slice, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    SliceStr deserialized = DataStream_PopSliceStr(&dataStream, &arena);
+    ASSERT_EQ(dataStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+
+    EXPECT_EQ(deserialized.len, 0);
+
+    Arena_Free(&arena);
+}
+
