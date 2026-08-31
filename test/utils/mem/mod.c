@@ -8,5 +8,7 @@ void registerUtilMemTests(void)
     REGISTER_TEST(ArenaTest_WithPageCapacity);
     REGISTER_TEST(ArenaTest_NewReset);
     REGISTER_TEST(ArenaTest_Alloc);
+    REGISTER_TEST(ArenaTest_AllocWithPage);
+    REGISTER_TEST(ArenaTest_AllocWithPageLarge);
     REGISTER_TEST(ArenaTest_CanAllocOnSamePage);
 }
