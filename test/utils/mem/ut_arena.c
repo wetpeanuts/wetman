@@ -83,6 +83,53 @@ TEST(ArenaTest_Alloc)
     Arena_Free(&arena);
 }
 
+TEST(ArenaTest_AllocWithPage)
+{
+    Arena arena = Arena_New();
+
+    void* page1 = NULL;
+    void* page2 = NULL;
+    void* page3 = NULL;
+
+    // First allocation on the first page
+    unsigned char* data1 = (unsigned char*)Arena_AllocWithPage(&arena, 1024, &page1);
+    ASSERT_NE(data1, (unsigned char*)NULL);
+    ASSERT_NE(page1, NULL);
+
+    // Second allocation on the same page -> same page pointer
+    unsigned char* data2 = (unsigned char*)Arena_AllocWithPage(&arena, 2048, &page2);
+    ASSERT_NE(data2, (unsigned char*)NULL);
+    EXPECT_EQ(page1, page2);
+    EXPECT_EQ(data1 + 1024, data2);
+
+    // Allocation too large for the page -> new page, different pointer
+    unsigned char* data3 = (unsigned char*)Arena_AllocWithPage(&arena, 2048, &page3);
+    ASSERT_NE(data3, (unsigned char*)NULL);
+    ASSERT_NE(page1, page3);
+    ASSERT_NE(data2 + 2048, data3);
+
+    Arena_Free(&arena);
+}
+
+TEST(ArenaTest_AllocWithPageLarge)
+{
+    // Allocation larger than the page capacity always lands on its own fresh page
+    Arena arena = Arena_WithPageCapacity(1024);
+
+    void* page1 = NULL;
+    unsigned char* data = (unsigned char*)Arena_AllocWithPage(&arena, 4096, &page1);
+    ASSERT_NE(data, (unsigned char*)NULL);
+    ASSERT_NE(page1, NULL);
+
+    // Next allocation forces a new page with default (head) capacity
+    void* page2 = NULL;
+    unsigned char* dataNext = (unsigned char*)Arena_AllocWithPage(&arena, 512, &page2);
+    ASSERT_NE(dataNext, (unsigned char*)NULL);
+    ASSERT_NE(page1, page2);
+
+    Arena_Free(&arena);
+}
+
 TEST(ArenaTest_CanAllocOnSamePage)
 {
     Arena arena = Arena_New();
