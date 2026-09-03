@@ -6,4 +6,8 @@
 
 #include <wetman/client/endpoint/mod.c>
 
+#include <wetman/client/commands/mod.c>
+
+#include <wetman/client/context.c>
+
 #endif // WETMAN_CLIENT_MOD_C

@@ -1,21 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-#include <wetman/client/endpoint/health_check.h>
-#include <wetman/client/endpoint/workspace_init.h>
-#include <wetman/client/endpoint/workspace_delete.h>
-#include <wetman/shared/persistence/workspace_config.h>
-#include <wetman/utils/data_struct/str.h>
-#include <wetman/utils/filesystem.h>
-#include <wetman/utils/net/client/unix_client.h>
+#include <wetman/client/context.h>
+#include <wetman/client/commands/parser.h>
+#include <wetman/client/commands/healthcheck.h>
+#include <wetman/client/commands/workspace_init.h>
+#include <wetman/client/commands/workspace_delete.h>
 
 #include <wetman/client/mod.c>
 
-
-#define SOCKET_PATH "/tmp/wetman_server.sock"
-#define CWD_BUFFER_SIZE 4096
 
 static void PrintUsage(FILE* out)
 {
@@ -33,201 +27,33 @@ static void PrintUsage(FILE* out)
             "  -h, --help               Show this help message and exit\n");
 }
 
-static int RunHealthCheck(void)
-{
-    Client client = UnixClient_Connect(SOCKET_PATH);
-
-    Endpoint_HealthCheck_Request request = { 0 };
-    Endpoint_HealthCheck_Response response = { 0 };
-
-    ReturnCode returnCode = Endpoint_HealthCheck_Call(&client, &request, &response);
-
-    client.disconnect(&client);
-
-    if (returnCode != RETURN_CODE_OK) {
-        fprintf(stderr,
-                "Health check failed with status code: %d\n",
-                (int)returnCode);
-        return (int)returnCode;
-    }
-
-    printf("OK\n");
-
-    return (int)returnCode;
-}
-
-static int RunWorkspaceInit(const char* name)
-{
-    char cwd[CWD_BUFFER_SIZE];
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
-        fprintf(stderr, "Failed to get current working directory\n");
-        return 1;
-    }
-
-    const char* directoryName = strrchr(cwd, '/');
-    directoryName = (directoryName != NULL) ? directoryName + 1 : cwd;
-
-    if (name == NULL) {
-        if (*directoryName == '\0') {
-            fprintf(stderr,
-                    "Cannot derive workspace name from current directory\n");
-            return 1;
-        }
-        name = directoryName;
-    }
-
-    Client client = UnixClient_Connect(SOCKET_PATH);
-
-    Endpoint_WorkspaceInit_Request request = {
-            .workspacePath = Str_FromCStr(cwd),
-            .workspaceName = Str_FromCStr(name),
-    };
-    Endpoint_WorkspaceInit_Response response = { 0 };
-
-    ReturnCode returnCode = Endpoint_WorkspaceInit_Call(&client, &request, &response);
-
-    client.disconnect(&client);
-
-    if (returnCode != RETURN_CODE_OK) {
-        fprintf(stderr,
-                "Workspace init failed with status code: %d\n",
-                (int)returnCode);
-        return (int)returnCode;
-    }
-
-    printf("Workspace initialized with id: %llu\n",
-            (unsigned long long)response.workspaceId);
-
-    return (int)returnCode;
-}
-
-static int RunWorkspaceInitCommand(int argc, char** argv)
-{
-    const char* name = NULL;
-
-    for (int i = 3; i < argc; ++i) {
-        if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--name") == 0) {
-            if (i + 1 >= argc) {
-                fprintf(stderr, "Missing value for option: %s\n", argv[i]);
-                PrintUsage(stderr);
-                return 1;
-            }
-            name = argv[++i];
-        } else {
-            fprintf(stderr, "Unknown option: %s\n", argv[i]);
-            PrintUsage(stderr);
-            return 1;
-        }
-    }
-
-    return RunWorkspaceInit(name);
-}
-
-static int RunWorkspaceDelete(size_t workspaceId)
-{
-    Client client = UnixClient_Connect(SOCKET_PATH);
-
-    Endpoint_WorkspaceDelete_Request request = {
-            .workspaceId = workspaceId,
-    };
-    Endpoint_WorkspaceDelete_Response response = { 0 };
-
-    ReturnCode returnCode = Endpoint_WorkspaceDelete_Call(&client, &request, &response);
-
-    client.disconnect(&client);
-
-    if (returnCode != RETURN_CODE_OK) {
-        fprintf(stderr,
-                "Workspace delete failed with status code: %d\n",
-                (int)returnCode);
-        return (int)returnCode;
-    }
-
-    printf("Workspace %llu deleted\n",
-            (unsigned long long)response.workspaceId);
-
-    return (int)returnCode;
-}
-
-static int RunWorkspaceDeleteCommand(int argc, char** argv)
-{
-    const char* workspaceIdStr = NULL;
-
-    for (int i = 3; i < argc; ++i) {
-        if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--workspace") == 0) {
-            if (i + 1 >= argc) {
-                fprintf(stderr, "Missing value for option: %s\n", argv[i]);
-                PrintUsage(stderr);
-                return 1;
-            }
-            workspaceIdStr = argv[++i];
-        } else {
-            fprintf(stderr, "Unknown option: %s\n", argv[i]);
-            PrintUsage(stderr);
-            return 1;
-        }
-    }
-
-    if (workspaceIdStr != NULL) {
-        return RunWorkspaceDelete((size_t)strtoull(workspaceIdStr, NULL, 10));
-    }
-
-    char cwd[CWD_BUFFER_SIZE];
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
-        fprintf(stderr, "Failed to get current working directory\n");
-        return 1;
-    }
-
-    Arena arena = Arena_New();
-    Str wetmanDir = FS_PathJoin(Str_FromCStr(cwd), Str_FromCStr(".wetman"), &arena);
-    Str configPath = FS_PathJoin(wetmanDir, Str_FromCStr("workspace.wmwscfg"), &arena);
-
-    if (!FS_CheckExists(configPath)) {
-        fprintf(stderr, "No workspace found in current directory\n");
-        Arena_Free(&arena);
-        return 1;
-    }
-
-    PersistenceStatus status;
-    WorkspaceConfig config = WorkspaceConfig_Read(configPath, &arena, &status);
-    if (status != PERSISTENCE_STATUS_OK) {
-        fprintf(stderr, "Failed to read workspace config\n");
-        Arena_Free(&arena);
-        return 1;
-    }
-
-    size_t workspaceId = config.workspaceId;
-    Arena_Free(&arena);
-
-    return RunWorkspaceDelete(workspaceId);
-}
-
 int main(int argc, char** argv)
 {
+    ClientContext_Init();
+
+    CommandParser parser = CommandParser_New();
+    CommandParser_RegisterCommand(&parser, Command_HealthCheck_Create(&globalClientContext.arena));
+    CommandParser_RegisterCommand(&parser, Command_WorkspaceInit_Create(&globalClientContext.arena));
+    CommandParser_RegisterCommand(&parser, Command_WorkspaceDelete_Create(&globalClientContext.arena));
+
     if (argc < 2 ||
             strcmp(argv[1], "-h") == 0 ||
             strcmp(argv[1], "--help") == 0) {
         PrintUsage(stdout);
+        ClientContext_Destroy();
         return 0;
     }
 
-    if (strcmp(argv[1], "healthcheck") == 0) {
-        return RunHealthCheck();
-    }
-
-    if (strcmp(argv[1], "workspace") == 0) {
-        if (argc >= 3 && strcmp(argv[2], "init") == 0) {
-            return RunWorkspaceInitCommand(argc, argv);
-        }
-        if (argc >= 3 && strcmp(argv[2], "delete") == 0) {
-            return RunWorkspaceDeleteCommand(argc, argv);
-        }
+    Command* cmd = CommandParser_Parse(&parser, argc, argv);
+    if (cmd == NULL) {
+        fprintf(stderr, "Unknown command\n");
         PrintUsage(stderr);
+        ClientContext_Destroy();
         return 1;
     }
 
-    fprintf(stderr, "Unknown command: %s\n", argv[1]);
-    PrintUsage(stderr);
+    i32 result = cmd->handler(&cmd->args, &globalClientContext.arena);
 
-    return 1;
+    ClientContext_Destroy();
+    return (int)result;
 }
