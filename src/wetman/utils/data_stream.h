@@ -2,6 +2,9 @@
 #define WETMAN_UTILS_SERIALIZATION_H
 
 #include <wetman/utils/data_struct/slice_i32.h>
+#include <wetman/utils/data_struct/slice_u32.h>
+#include <wetman/utils/data_struct/slice_u64.h>
+#include <wetman/utils/data_struct/slice_i64.h>
 #include <wetman/utils/data_struct/slice_str.h>
 #include <wetman/utils/data_struct/str.h>
 #include <wetman/utils/mem/arena.h>
@@ -47,6 +50,15 @@ Str DataStream_PopStr(DataStream* dataStream);
 
 void DataStream_PushSliceI32(DataStream* dataStream, SliceI32 value, Arena* arena);
 SliceI32 DataStream_PopSliceI32(DataStream* dataStream);
+
+void DataStream_PushSliceU32(DataStream* dataStream, SliceU32 value, Arena* arena);
+SliceU32 DataStream_PopSliceU32(DataStream* dataStream);
+
+void DataStream_PushSliceU64(DataStream* dataStream, SliceU64 value, Arena* arena);
+SliceU64 DataStream_PopSliceU64(DataStream* dataStream);
+
+void DataStream_PushSliceI64(DataStream* dataStream, SliceI64 value, Arena* arena);
+SliceI64 DataStream_PopSliceI64(DataStream* dataStream);
 
 void DataStream_PushSliceStr(DataStream* dataStream, SliceStr value, Arena* arena);
 SliceStr DataStream_PopSliceStr(DataStream* dataStream, Arena* arena);

@@ -1,6 +1,9 @@
 #include <wetman/utils/data_stream.h>
 
 #include <wetman/utils/data_struct/slice_i32.h>
+#include <wetman/utils/data_struct/slice_u32.h>
+#include <wetman/utils/data_struct/slice_u64.h>
+#include <wetman/utils/data_struct/slice_i64.h>
 #include <wetman/utils/data_struct/slice_str.h>
 #include <wetman/utils/macro.h>
 
@@ -18,6 +21,9 @@ typedef enum {
     DATA_TYPE_U64,
     DATA_TYPE_STR,
     DATA_TYPE_SLICE_I32,
+    DATA_TYPE_SLICE_U32,
+    DATA_TYPE_SLICE_U64,
+    DATA_TYPE_SLICE_I64,
     DATA_TYPE_SLICE_STR,
 } __DataType;
 
@@ -316,6 +322,171 @@ SliceI32 DataStream_PopSliceI32(DataStream* dataStream)
 
     SliceI32 value = SliceI32_FromData(
         (i32*)(dataStream->__data.data + headerLen), len);
+
+    dataStream->__data.data += dataLen;
+    dataStream->__data.len -= dataLen;
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+
+    return value;
+}
+
+void DataStream_PushSliceU32(
+    DataStream* dataStream, SliceU32 value, Arena* arena)
+{
+    usize const headerLen = sizeof(i32) + sizeof(usize);
+    usize const dataLen = headerLen + value.len * sizeof(u32);
+    char* data = (char*)Arena_Alloc(arena, dataLen);
+    if (!data) {
+        dataStream->lastResult = DATA_STREAM_RESULT_FAILED_ALLOCATE_MEMORY;
+        return;
+    }
+
+    *((i32*)data) = DATA_TYPE_SLICE_U32;
+    *((usize*)(data + sizeof(i32))) = value.len;
+    if (value.len > 0) {
+        memcpy(data + headerLen, value.data, value.len * sizeof(u32));
+    }
+
+    DataSlice serializedValue = { .data = data, .len = dataLen };
+
+    dataStream->__data = Str_Concat(dataStream->__data, serializedValue, arena);
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+}
+
+SliceU32 DataStream_PopSliceU32(DataStream* dataStream)
+{
+    usize const headerLen = sizeof(i32) + sizeof(usize);
+    if (dataStream->__data.len < headerLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return SliceU32_CreateEmpty();
+    }
+
+    i32 valueType = *((i32*)dataStream->__data.data);
+    if (valueType != DATA_TYPE_SLICE_U32) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_TYPE;
+        return SliceU32_CreateEmpty();
+    }
+
+    usize len = *((usize*)(dataStream->__data.data + sizeof(i32)));
+
+    usize const dataLen = headerLen + len * sizeof(u32);
+    if (dataStream->__data.len < dataLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return SliceU32_CreateEmpty();
+    }
+
+    SliceU32 value = SliceU32_FromData(
+        (u32*)(dataStream->__data.data + headerLen), len);
+
+    dataStream->__data.data += dataLen;
+    dataStream->__data.len -= dataLen;
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+
+    return value;
+}
+
+void DataStream_PushSliceU64(
+    DataStream* dataStream, SliceU64 value, Arena* arena)
+{
+    usize const headerLen = sizeof(i32) + sizeof(usize);
+    usize const dataLen = headerLen + value.len * sizeof(u64);
+    char* data = (char*)Arena_Alloc(arena, dataLen);
+    if (!data) {
+        dataStream->lastResult = DATA_STREAM_RESULT_FAILED_ALLOCATE_MEMORY;
+        return;
+    }
+
+    *((i32*)data) = DATA_TYPE_SLICE_U64;
+    *((usize*)(data + sizeof(i32))) = value.len;
+    if (value.len > 0) {
+        memcpy(data + headerLen, value.data, value.len * sizeof(u64));
+    }
+
+    DataSlice serializedValue = { .data = data, .len = dataLen };
+
+    dataStream->__data = Str_Concat(dataStream->__data, serializedValue, arena);
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+}
+
+SliceU64 DataStream_PopSliceU64(DataStream* dataStream)
+{
+    usize const headerLen = sizeof(i32) + sizeof(usize);
+    if (dataStream->__data.len < headerLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return SliceU64_CreateEmpty();
+    }
+
+    i32 valueType = *((i32*)dataStream->__data.data);
+    if (valueType != DATA_TYPE_SLICE_U64) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_TYPE;
+        return SliceU64_CreateEmpty();
+    }
+
+    usize len = *((usize*)(dataStream->__data.data + sizeof(i32)));
+
+    usize const dataLen = headerLen + len * sizeof(u64);
+    if (dataStream->__data.len < dataLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return SliceU64_CreateEmpty();
+    }
+
+    SliceU64 value = SliceU64_FromData(
+        (u64*)(dataStream->__data.data + headerLen), len);
+
+    dataStream->__data.data += dataLen;
+    dataStream->__data.len -= dataLen;
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+
+    return value;
+}
+
+void DataStream_PushSliceI64(
+    DataStream* dataStream, SliceI64 value, Arena* arena)
+{
+    usize const headerLen = sizeof(i32) + sizeof(usize);
+    usize const dataLen = headerLen + value.len * sizeof(i64);
+    char* data = (char*)Arena_Alloc(arena, dataLen);
+    if (!data) {
+        dataStream->lastResult = DATA_STREAM_RESULT_FAILED_ALLOCATE_MEMORY;
+        return;
+    }
+
+    *((i32*)data) = DATA_TYPE_SLICE_I64;
+    *((usize*)(data + sizeof(i32))) = value.len;
+    if (value.len > 0) {
+        memcpy(data + headerLen, value.data, value.len * sizeof(i64));
+    }
+
+    DataSlice serializedValue = { .data = data, .len = dataLen };
+
+    dataStream->__data = Str_Concat(dataStream->__data, serializedValue, arena);
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+}
+
+SliceI64 DataStream_PopSliceI64(DataStream* dataStream)
+{
+    usize const headerLen = sizeof(i32) + sizeof(usize);
+    if (dataStream->__data.len < headerLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return SliceI64_CreateEmpty();
+    }
+
+    i32 valueType = *((i32*)dataStream->__data.data);
+    if (valueType != DATA_TYPE_SLICE_I64) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_TYPE;
+        return SliceI64_CreateEmpty();
+    }
+
+    usize len = *((usize*)(dataStream->__data.data + sizeof(i32)));
+
+    usize const dataLen = headerLen + len * sizeof(i64);
+    if (dataStream->__data.len < dataLen) {
+        dataStream->lastResult = DATA_STREAM_RESULT_WRONG_VALUE_FORMAT;
+        return SliceI64_CreateEmpty();
+    }
+
+    SliceI64 value = SliceI64_FromData(
+        (i64*)(dataStream->__data.data + headerLen), len);
 
     dataStream->__data.data += dataLen;
     dataStream->__data.len -= dataLen;

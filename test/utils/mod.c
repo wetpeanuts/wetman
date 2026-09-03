@@ -22,6 +22,12 @@ void registerUtilTests(void)
     REGISTER_TEST(DataStreamTest_PushPop_SliceI32_Empty);
     REGISTER_TEST(DataStreamTest_PushPop_SliceStr);
     REGISTER_TEST(DataStreamTest_PushPop_SliceStr_Empty);
+    REGISTER_TEST(DataStreamTest_PushPop_SliceU32);
+    REGISTER_TEST(DataStreamTest_PushPop_SliceU32_Empty);
+    REGISTER_TEST(DataStreamTest_PushPop_SliceU64);
+    REGISTER_TEST(DataStreamTest_PushPop_SliceU64_Empty);
+    REGISTER_TEST(DataStreamTest_PushPop_SliceI64);
+    REGISTER_TEST(DataStreamTest_PushPop_SliceI64_Empty);
 
     registerUtilAsyncTests();
     registerUtilDataStructTests();
