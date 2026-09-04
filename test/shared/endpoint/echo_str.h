@@ -23,9 +23,11 @@ static inline MAYBE_UNUSED void TestEndpointEchoStr_RequestSerializer(
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_RequestDeserializer(
         TestEndpointEchoStr_Request* req,
-        DataStream*                  ds)
+        DataStream*                  ds,
+        Arena*                       arena)
 {
     req->value = DataStream_PopStr(ds);
+    (void)arena;
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseSerializer(

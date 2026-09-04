@@ -26,9 +26,9 @@
         endpointName##_RequestSerializer((endpointName##_Request*)req, ds, arena); \
     } \
     \
-    void __Endpoint_##endpointName##_RequestDeserializer(void* req, DataStream* ds) \
+    void __Endpoint_##endpointName##_RequestDeserializer(void* req, DataStream* ds, Arena* arena) \
     { \
-        endpointName##_RequestDeserializer((endpointName##_Request*)req, ds); \
+        endpointName##_RequestDeserializer((endpointName##_Request*)req, ds, arena); \
     } \
     \
     void* __Endpoint_##endpointName##_RequestFactory(Arena* arena) \

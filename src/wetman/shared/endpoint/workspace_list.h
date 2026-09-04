@@ -32,10 +32,12 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceList_RequestSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceList_RequestDeserializer(
         Endpoint_WorkspaceList_Request* req,
-        DataStream*                     ds)
+        DataStream*                     ds,
+        Arena*                          arena)
 {
     (void)req;
     (void)ds;
+    (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceList_ResponseSerializer(
