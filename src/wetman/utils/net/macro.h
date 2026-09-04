@@ -12,7 +12,8 @@
     ReturnCode endpointName##_Call( \
             Client*               client, \
             endpointName##_Request* request, \
-            endpointName##_Response* response);
+            endpointName##_Response* response, \
+            Arena*                arena);
 
 #define ENDPOINT_IMPL_SERVER(endpointId, endpointName) \
     ReturnCode __Endpoint_##endpointName(void* request, void* response) { \
@@ -70,26 +71,25 @@
     ReturnCode endpointName##_Call( \
             Client*                  client, \
             endpointName##_Request*  request, \
-            endpointName##_Response* response) \
+            endpointName##_Response* response, \
+            Arena*                   arena) \
     { \
-        Arena arena = Arena_New(); \
         DataStream requestBody = DataStream_New(); \
-        endpointName##_RequestSerializer(request, &requestBody, &arena); \
+        endpointName##_RequestSerializer(request, &requestBody, arena); \
         DataStream responseData = DataStream_New(); \
         ReturnCode returnCode = Client_CallEndpoint( \
                 client, \
                 endpointId, \
-                &arena, \
+                arena, \
                 &requestBody, \
                 &responseData); \
         if (returnCode == RETURN_CODE_OK) { \
             ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData); \
             returnCode = (ReturnCode)responseHeader.returnCode; \
             if (returnCode == RETURN_CODE_OK) { \
-                endpointName##_ResponseDeserializer(response, &responseData, &arena); \
+                endpointName##_ResponseDeserializer(response, &responseData, arena); \
             } \
         } \
-        Arena_Free(&arena); \
         return returnCode; \
     }
 

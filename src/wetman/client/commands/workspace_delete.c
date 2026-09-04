@@ -16,7 +16,7 @@
 #define CWD_BUFFER_SIZE 4096
 
 
-static i32 __Command_WorkspaceDelete_Impl(size_t workspaceId)
+static i32 __Command_WorkspaceDelete_Impl(size_t workspaceId, Arena* arena)
 {
     Client client = globalClientContext.client;
 
@@ -25,7 +25,7 @@ static i32 __Command_WorkspaceDelete_Impl(size_t workspaceId)
     };
     Endpoint_WorkspaceDelete_Response response = { 0 };
 
-    ReturnCode returnCode = Endpoint_WorkspaceDelete_Call(&client, &request, &response);
+    ReturnCode returnCode = Endpoint_WorkspaceDelete_Call(&client, &request, &response, arena);
 
     if (returnCode != RETURN_CODE_OK) {
         fprintf(stderr,
@@ -46,7 +46,7 @@ static i32 __Command_WorkspaceDelete_Handler(const Args* args, Arena* arena)
 
     if (args->args[0].initialized) {
         size_t workspaceId = (size_t)strtoull(args->args[0].value.data, NULL, 10);
-        return __Command_WorkspaceDelete_Impl(workspaceId);
+        return __Command_WorkspaceDelete_Impl(workspaceId, arena);
     }
 
     char* cwdBuf = (char*)Arena_Alloc(arena, CWD_BUFFER_SIZE);
@@ -70,7 +70,7 @@ static i32 __Command_WorkspaceDelete_Handler(const Args* args, Arena* arena)
         return 1;
     }
 
-    return __Command_WorkspaceDelete_Impl(config.workspaceId);
+    return __Command_WorkspaceDelete_Impl(config.workspaceId, arena);
 }
 
 Command Command_WorkspaceDelete_Create(Arena* arena)

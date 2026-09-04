@@ -25,10 +25,13 @@ TEST(EndpointClientTest_EchoStr)
         .value = Str_FromCStr(""),
     };
 
-    ReturnCode returnCode = TestEndpointEchoStr_Call(&client, &request, &response);
+    Arena arena = Arena_New();
+
+    ReturnCode returnCode = TestEndpointEchoStr_Call(&client, &request, &response, &arena);
 
     EXPECT_EQ(returnCode, RETURN_CODE_OK);
     EXPECT(Str_EqStr(response.value, request.value));
 
+    Arena_Free(&arena);
     client.disconnect(&client);
 }

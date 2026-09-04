@@ -18,8 +18,9 @@
 
 
 i32 __Command_WorkspaceInit_Impl(
-        Str workspacePath,
-        Str workspaceName)
+        Str   workspacePath,
+        Str   workspaceName,
+        Arena* arena)
 {
     Client client = globalClientContext.client;
 
@@ -29,7 +30,7 @@ i32 __Command_WorkspaceInit_Impl(
     };
     Endpoint_WorkspaceInit_Response response = { 0 };
 
-    ReturnCode returnCode = Endpoint_WorkspaceInit_Call(&client, &request, &response);
+    ReturnCode returnCode = Endpoint_WorkspaceInit_Call(&client, &request, &response, arena);
 
     if (returnCode != RETURN_CODE_OK) {
         fprintf(stderr,
@@ -69,7 +70,7 @@ i32 __Command_WorkspaceInit_Handler(const Args* args, Arena* arena)
         workspaceName = args->args[0].value;
     }
 
-    return __Command_WorkspaceInit_Impl(workspacePath, workspaceName);
+    return __Command_WorkspaceInit_Impl(workspacePath, workspaceName, arena);
 }
 
 Command Command_WorkspaceInit_Create(Arena* arena)

@@ -9,14 +9,13 @@
 static i32 __Command_HealthCheck_Handler(const Args* args, Arena* arena)
 {
     (void)args;
-    (void)arena;
 
     Client client = globalClientContext.client;
 
     Endpoint_HealthCheck_Request request = { 0 };
     Endpoint_HealthCheck_Response response = { 0 };
 
-    ReturnCode returnCode = Endpoint_HealthCheck_Call(&client, &request, &response);
+    ReturnCode returnCode = Endpoint_HealthCheck_Call(&client, &request, &response, arena);
 
     if (returnCode != RETURN_CODE_OK) {
         fprintf(stderr,
