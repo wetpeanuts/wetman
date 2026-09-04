@@ -7,6 +7,7 @@
 #include <wetman/server/endpoint/health_check.h>
 #include <wetman/server/endpoint/workspace_init.h>
 #include <wetman/server/endpoint/workspace_delete.h>
+#include <wetman/server/endpoint/workspace_list.h>
 
 #include <wetman/server/mod.c>
 
@@ -36,6 +37,8 @@ int main(void)
             Endpoint_WorkspaceInit_Create());
     EndpointRegistry_RegisterEndpoint(&endpointRegistry,
             Endpoint_WorkspaceDelete_Create());
+    EndpointRegistry_RegisterEndpoint(&endpointRegistry,
+            Endpoint_WorkspaceList_Create());
 
     i32 result = Server_Run("/tmp/wetman_server.sock", &endpointRegistry);
     ServerContext_Destroy();

@@ -75,7 +75,7 @@ TEST(EndpointRegistryTest_CallEndpoint_Success)
     ASSERT_EQ(responseHeader.msgLen, TEST_ENDPOINT_RESPONSE_SERIALIZED_LEN);
 
     TestEndpointEchoI32_Response response;
-    TestEndpointEchoI32_ResponseDeserializer(&response, &responseData);
+    TestEndpointEchoI32_ResponseDeserializer(&response, &responseData, &arena);
 
     EXPECT_EQ(response.value, request.value);
 

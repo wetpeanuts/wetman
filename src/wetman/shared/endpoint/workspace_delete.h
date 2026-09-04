@@ -40,9 +40,11 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_ResponseSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_ResponseDeserializer(
         Endpoint_WorkspaceDelete_Response* resp,
-        DataStream*                        ds)
+        DataStream*                        ds,
+        Arena*                             arena)
 {
     resp->workspaceId = (usize)DataStream_PopU64(ds);
+    (void)arena;
 }
 
 #endif // WETMAN_SHARED_ENDPOINT_WORKSPACE_DELETE_H

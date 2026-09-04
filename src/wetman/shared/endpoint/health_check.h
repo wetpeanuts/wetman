@@ -46,10 +46,12 @@ static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseDeserializer(
         Endpoint_HealthCheck_Response* resp,
-        DataStream*                    ds)
+        DataStream*                    ds,
+        Arena*                         arena)
 {
     (void)resp;
     (void)ds;
+    (void)arena;
 }
 
 #endif // WETMAN_SHARED_ENDPOINT_HEALTH_CHECK_H

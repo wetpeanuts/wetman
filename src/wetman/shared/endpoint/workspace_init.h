@@ -43,9 +43,11 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseDeserializer(
         Endpoint_WorkspaceInit_Response* resp,
-        DataStream*                      ds)
+        DataStream*                      ds,
+        Arena*                           arena)
 {
     resp->workspaceId = (usize)DataStream_PopU64(ds);
+    (void)arena;
 }
 
 #endif // WETMAN_SHARED_ENDPOINT_WORKSPACE_INIT_H

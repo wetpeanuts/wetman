@@ -38,9 +38,11 @@ static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseSerializer(
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseDeserializer(
         TestEndpointEchoStr_Response* resp,
-        DataStream*                   ds)
+        DataStream*                   ds,
+        Arena*                        arena)
 {
     resp->value = DataStream_PopStr(ds);
+    (void)arena;
 }
 
 ENDPOINT_DECLARE_SERVER(TestEndpointEchoStr)
