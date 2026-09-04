@@ -17,10 +17,12 @@ ReturnCode Endpoint_WorkspaceList(
 
     Arena* arena = &globalServerContext.arena;
 
+    // TODO: Init vec with capacity
     Vec ids    = VEC_NEW(u64, arena);
     Vec names  = VEC_NEW(Str, arena);
     Vec paths  = VEC_NEW(Str, arena);
 
+    // TODO: Walk only existing dirs in file system
     for (usize workspaceId = 0;
             workspaceId < globalServerContext.nextWorkspaceId;
             workspaceId++) {
@@ -36,7 +38,7 @@ ReturnCode Endpoint_WorkspaceList(
 
         Str configPath = FS_PathJoin(
                 workspaceDir,
-                Str_FromCStr("workspace.wmwscfg"),
+                Str_FromCStr("workspace.wmwscfg"), // TODO: put the const in globalServerContext
                 arena);
 
         PersistenceStatus status;
