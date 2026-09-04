@@ -2,30 +2,73 @@
 #define WETMAN_UTILS_VEC_H
 
 #include <wetman/utils/mem/arena.h>
+#include <wetman/utils/macro.h>
 #include <wetman/utils/type.h>
 
-
-typedef struct {
-    usize  len;
-    usize  cap;
-
-    void*  __data;
-    usize  __itemSize;
-    Arena* __arena;
-} Vec;
-
-Vec Vec_New(usize itemSize, Arena* arena);
-Vec Vec_WithCapacity(usize itemSize, usize cap, Arena* arena);
-
-// Returns 1 on success, 0 on failure
-i32 Vec_Push(Vec* vec, void* item, usize itemSize);
-void* Vec_At(Vec* vec, usize pos);
+#include <string.h>
 
 
-#define VEC_NEW(type, arena) Vec_New(sizeof(type), arena)
-#define VEC_WITH_CAPACITY(type, cap, arena) Vec_WithCapacity(sizeof(type), cap, arena)
+#define VEC_DECLARE(Prefix, Type)                                               \
+    typedef struct {                                                           \
+        Type*  data;                                                           \
+        usize  len;                                                            \
+        usize  cap;                                                            \
+        void*  __arena;                                                        \
+    } Prefix;                                                                  \
+                                                                               \
+    Prefix Prefix##_New(Arena* arena);                                          \
+    Prefix Prefix##_WithCapacity(usize cap, Arena* arena);                      \
+    i32    Prefix##_Push(Prefix* vec, Type* item);                              \
+    Type*  Prefix##_At(const Prefix* vec, usize pos);
 
-#define VEC_PUSH(type, vec, item) Vec_Push(vec, item, sizeof(type))
-#define VEC_AT(type, vec, pos) (type*)Vec_At(vec, pos)
+
+#define VEC_IMPL(Prefix, Type)                                                  \
+    Prefix Prefix##_New(Arena* arena)                                           \
+    {                                                                          \
+        Prefix vec = {                                                         \
+            .len     = 0,                                                      \
+            .cap     = 2,                                                      \
+            .data    = (Type*)Arena_Alloc(arena, 2 * sizeof(Type)),             \
+            .__arena = arena,                                                  \
+        };                                                                     \
+        return vec;                                                            \
+    }                                                                          \
+                                                                               \
+    Prefix Prefix##_WithCapacity(usize cap, Arena* arena)                       \
+    {                                                                          \
+        Prefix vec = {                                                         \
+            .len     = 0,                                                      \
+            .cap     = cap,                                                    \
+            .data    = (Type*)Arena_Alloc(arena, cap * sizeof(Type)),           \
+            .__arena = arena,                                                  \
+        };                                                                     \
+        return vec;                                                            \
+    }                                                                          \
+                                                                               \
+    i32 Prefix##_Push(Prefix* vec, Type* item)                                  \
+    {                                                                          \
+        if (UNLIKELY(vec->len == vec->cap)) {                                   \
+            usize newCap = vec->cap * 2;                                        \
+            Type* newData = (Type*)Arena_Alloc(vec->__arena,                    \
+                                               newCap * sizeof(Type));          \
+            if (UNLIKELY(newData == NULL)) {                                   \
+                return 0;                                                      \
+            }                                                                  \
+            memcpy(newData, vec->data, vec->len * sizeof(Type));                \
+            vec->data = newData;                                               \
+            vec->cap  = newCap;                                                \
+        }                                                                      \
+                                                                               \
+        vec->data[vec->len++] = *item;                                         \
+        return 1;                                                              \
+    }                                                                          \
+                                                                               \
+    Type* Prefix##_At(const Prefix* vec, usize pos)                             \
+    {                                                                          \
+        if (UNLIKELY(pos >= vec->len)) {                                       \
+            return NULL;                                                       \
+        }                                                                      \
+        return &vec->data[pos];                                                \
+    }
 
 #endif // WETMAN_UTILS_VEC_H
