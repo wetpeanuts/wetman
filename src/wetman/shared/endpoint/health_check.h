@@ -28,10 +28,12 @@ static inline MAYBE_UNUSED void Endpoint_HealthCheck_RequestSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_RequestDeserializer(
         Endpoint_HealthCheck_Request* req,
-        DataStream*                   ds)
+        DataStream*                   ds,
+        Arena*                        arena)
 {
     (void)req;
     (void)ds;
+    (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseSerializer(

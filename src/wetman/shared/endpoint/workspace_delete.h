@@ -25,9 +25,11 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_RequestSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_RequestDeserializer(
         Endpoint_WorkspaceDelete_Request* req,
-        DataStream*                       ds)
+        DataStream*                       ds,
+        Arena*                            arena)
 {
     req->workspaceId = (usize)DataStream_PopU64(ds);
+    (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_ResponseSerializer(

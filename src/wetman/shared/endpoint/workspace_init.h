@@ -27,10 +27,12 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestSerializer(
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestDeserializer(
         Endpoint_WorkspaceInit_Request* req,
-        DataStream*                     ds)
+        DataStream*                     ds,
+        Arena*                          arena)
 {
     req->workspacePath = DataStream_PopStr(ds);
     req->workspaceName = DataStream_PopStr(ds);
+    (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseSerializer(

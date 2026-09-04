@@ -25,7 +25,7 @@ DataStream Endpoint_Call(
 
     void* request = endpoint->requestFactory(arena);
     void* response = endpoint->responseFactory(arena);
-    endpoint->requestDeserializer(request, requestData);
+    endpoint->requestDeserializer(request, requestData, arena);
 
     if (requestData->lastResult != DATA_STREAM_RESULT_SUCCESS) {
         fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestData->lastResult);
