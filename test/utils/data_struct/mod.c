@@ -1,7 +1,8 @@
 #include <wetman/utils/test/macro.h>
 
 #include "ut_str.c"
-#include "ut_vec.c"
+#include "ut_vec_i32.c"
+#include "ut_vec_str.c"
 #include "ut_slice_i32.c"
 #include "ut_slice_u32.c"
 #include "ut_slice_u64.c"
@@ -16,10 +17,15 @@ void registerUtilDataStructTests(void)
     REGISTER_TEST(StrTest_FromU64);
     REGISTER_TEST(StrTest_Concat);
 
-    REGISTER_TEST(VecTest_New);
-    REGISTER_TEST(VecTest_WithCapacity);
-    REGISTER_TEST(VecTest_PushAt);
-    REGISTER_TEST(VecTest_AtOutOfRange);
+    REGISTER_TEST(VecI32Test_New);
+    REGISTER_TEST(VecI32Test_WithCapacity);
+    REGISTER_TEST(VecI32Test_PushAt);
+    REGISTER_TEST(VecI32Test_AtOutOfRange);
+
+    REGISTER_TEST(VecStrTest_New);
+    REGISTER_TEST(VecStrTest_WithCapacity);
+    REGISTER_TEST(VecStrTest_PushAt);
+    REGISTER_TEST(VecStrTest_AtOutOfRange);
 
     REGISTER_TEST(SliceI32Test_CreateEmpty);
     REGISTER_TEST(SliceI32Test_FromData);

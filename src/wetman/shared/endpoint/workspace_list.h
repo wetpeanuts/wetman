@@ -5,7 +5,6 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/endpoint.h>
-#include <wetman/utils/data_struct/vec.h>
 #include <wetman/utils/data_struct/slice_str.h>
 #include <wetman/utils/data_struct/slice_u64.h>
 

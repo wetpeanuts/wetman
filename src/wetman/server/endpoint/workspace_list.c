@@ -6,7 +6,8 @@
 
 #include <wetman/utils/net/macro.h>
 #include <wetman/utils/filesystem.h>
-#include <wetman/utils/data_struct/vec.h>
+#include <wetman/utils/data_struct/vec_u64.h>
+#include <wetman/utils/data_struct/vec_str.h>
 
 
 ReturnCode Endpoint_WorkspaceList(
@@ -17,10 +18,9 @@ ReturnCode Endpoint_WorkspaceList(
 
     Arena* arena = &globalServerContext.arena;
 
-    // TODO: Init vec with capacity
-    Vec ids    = VEC_NEW(u64, arena);
-    Vec names  = VEC_NEW(Str, arena);
-    Vec paths  = VEC_NEW(Str, arena);
+    VecU64 ids   = VecU64_WithCapacity(globalServerContext.nextWorkspaceId, arena);
+    VecStr names = VecStr_WithCapacity(globalServerContext.nextWorkspaceId, arena);
+    VecStr paths = VecStr_WithCapacity(globalServerContext.nextWorkspaceId, arena);
 
     // TODO: Walk only existing dirs in file system
     for (usize workspaceId = 0;
@@ -48,14 +48,14 @@ ReturnCode Endpoint_WorkspaceList(
         }
 
         u64 id = (u64)config.workspaceId;
-        VEC_PUSH(u64, &ids, &id);
-        VEC_PUSH(Str, &names, &config.workspaceName);
-        VEC_PUSH(Str, &paths, &config.workspacePath);
+        VecU64_Push(&ids, &id);
+        VecStr_Push(&names, &config.workspaceName);
+        VecStr_Push(&paths, &config.workspacePath);
     }
 
-    response->workspaceIds = SliceU64_FromData((u64*)ids.__data, ids.len);
-    response->workspaceNames = SliceStr_FromData((Str*)names.__data, names.len);
-    response->workspacePaths = SliceStr_FromData((Str*)paths.__data, paths.len);
+    response->workspaceIds   = SliceU64_FromData(ids.data, ids.len);
+    response->workspaceNames = SliceStr_FromData(names.data, names.len);
+    response->workspacePaths = SliceStr_FromData(paths.data, paths.len);
 
     return RETURN_CODE_OK;
 }
