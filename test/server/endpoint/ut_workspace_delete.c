@@ -46,7 +46,7 @@ TEST(WorkspaceDeleteTest_CallEndpoint_Success)
     EXPECT_EQ(initResponseHeader.returnCode, RETURN_CODE_OK);
 
     Endpoint_WorkspaceInit_Response initResponse;
-    Endpoint_WorkspaceInit_ResponseDeserializer(&initResponse, &initResponseData);
+    Endpoint_WorkspaceInit_ResponseDeserializer(&initResponse, &initResponseData, &arena);
     EXPECT_EQ(initResponse.workspaceId, 0);
 
     // Verify workspace exists
@@ -86,7 +86,7 @@ TEST(WorkspaceDeleteTest_CallEndpoint_Success)
     EXPECT_EQ(deleteResponseHeader.returnCode, RETURN_CODE_OK);
 
     Endpoint_WorkspaceDelete_Response deleteResponse;
-    Endpoint_WorkspaceDelete_ResponseDeserializer(&deleteResponse, &deleteResponseData);
+    Endpoint_WorkspaceDelete_ResponseDeserializer(&deleteResponse, &deleteResponseData, &arena);
     EXPECT_EQ(deleteResponse.workspaceId, 0);
 
     // Verify workspace is deleted

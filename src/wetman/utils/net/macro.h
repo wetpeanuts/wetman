@@ -41,9 +41,9 @@
         endpointName##_ResponseSerializer((endpointName##_Response*)resp, ds, arena); \
     } \
     \
-    void __Endpoint_##endpointName##_ResponseDeserializer(void* resp, DataStream* ds) \
+    void __Endpoint_##endpointName##_ResponseDeserializer(void* resp, DataStream* ds, Arena* arena) \
     { \
-        endpointName##_ResponseDeserializer((endpointName##_Response*)resp, ds); \
+        endpointName##_ResponseDeserializer((endpointName##_Response*)resp, ds, arena); \
     } \
     \
     void* __Endpoint_##endpointName##_ResponseFactory(Arena* arena) \
@@ -86,7 +86,7 @@
             ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData); \
             returnCode = (ReturnCode)responseHeader.returnCode; \
             if (returnCode == RETURN_CODE_OK) { \
-                endpointName##_ResponseDeserializer(response, &responseData); \
+                endpointName##_ResponseDeserializer(response, &responseData, &arena); \
             } \
         } \
         Arena_Free(&arena); \

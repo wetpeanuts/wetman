@@ -16,7 +16,7 @@ typedef void(*EndpointRequestSerializer)(void*, DataStream*, Arena*);
 typedef void(*EndpointRequestDeserializer)(void*, DataStream*);
 typedef void*(*EndpointRequestFactory)(Arena*);
 typedef void(*EndpointResponseSerializer)(void*, DataStream*, Arena*);
-typedef void(*EndpointResponseDeserializer)(void*, DataStream*);
+typedef void(*EndpointResponseDeserializer)(void*, DataStream*, Arena*);
 typedef void*(*EndpointResponseFactory)(Arena*);
 
 typedef struct {

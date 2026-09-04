@@ -46,7 +46,7 @@ TEST(WorkspaceInitTest_CallEndpoint_Success)
     EXPECT_EQ(responseHeader.msgLen, sizeof(i32) + sizeof(u64));
 
     Endpoint_WorkspaceInit_Response response;
-    Endpoint_WorkspaceInit_ResponseDeserializer(&response, &responseData);
+    Endpoint_WorkspaceInit_ResponseDeserializer(&response, &responseData, &arena);
     EXPECT_EQ(response.workspaceId, 0);
 
     Str wetmanDir = FS_PathJoin(
