@@ -8,6 +8,7 @@
 #include <wetman/server/endpoint/workspace_init.h>
 #include <wetman/server/endpoint/workspace_delete.h>
 #include <wetman/server/endpoint/workspace_list.h>
+#include <wetman/server/endpoint/task_new.h>
 
 #include <wetman/server/mod.c>
 
@@ -39,6 +40,8 @@ int main(void)
             Endpoint_WorkspaceDelete_Create());
     EndpointRegistry_RegisterEndpoint(&endpointRegistry,
             Endpoint_WorkspaceList_Create());
+    EndpointRegistry_RegisterEndpoint(&endpointRegistry,
+            Endpoint_TaskNew_Create());
 
     i32 result = Server_Run("/tmp/wetman_server.sock", &endpointRegistry);
     ServerContext_Destroy();
@@ -46,3 +49,4 @@ int main(void)
 
     return result;
 }
+

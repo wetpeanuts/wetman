@@ -3,6 +3,7 @@
 #include "ut_context.c"
 #include "ut_lock.c"
 #include "endpoint/mod.c"
+#include "persistence/mod.c"
 
 void registerServerTests(void)
 {
@@ -12,4 +13,6 @@ void registerServerTests(void)
     REGISTER_TEST(ServerLockTest_Release_CleansUpFile);
     REGISTER_TEST(ServerLockTest_AcquireAfterRelease_Success);
     registerServerEndpointTests();
+    registerServerPersistenceTests();
 }
+
