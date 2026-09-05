@@ -8,5 +8,7 @@
 
 #include <wetman/server/lock.c>
 #include <wetman/server/context.c>
+#include <wetman/server/persistence/mod.c>
 
 #endif // WETMAN_SERVER_MOD_C
+

@@ -7,9 +7,10 @@
 
 
 typedef struct {
-    usize             workspaceId;
-    Str               workspaceName;
-    Str               workspacePath;
+    usize workspaceId;
+    Str   workspaceName;
+    Str   workspacePath;
+    usize nextTaskId;
 } WorkspaceConfig;
 
 

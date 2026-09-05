@@ -51,13 +51,28 @@ ReturnCode Endpoint_WorkspaceInit(
     }
     close(fdWorkspaceConfig);
 
-    response->workspaceId =
+response->workspaceId =
         ServerContext_InitWorkspace(workspaceConfigPath, &arena);
+
+    Str workspaceDirName = Str_FromU64((u64)response->workspaceId, &arena);
+    Str workspaceDirPath = FS_PathJoin(
+            globalServerContext.workspacesPath,
+            workspaceDirName,
+            &arena);
+    Str tasksDir = FS_PathJoin(
+            workspaceDirPath,
+            Str_FromCStr("tasks"),
+            &arena);
+    if (!FS_CreateDir(tasksDir)) {
+        Arena_Free(&arena);
+        return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
+    }
 
     WorkspaceConfig config = {
         .workspaceId   = response->workspaceId,
         .workspaceName = request->workspaceName,
         .workspacePath = request->workspacePath,
+        .nextTaskId    = 0,
     };
 
     PersistenceStatus status = WorkspaceConfig_Write(workspaceConfigPath, &config);

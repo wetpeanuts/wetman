@@ -75,6 +75,12 @@ TEST(WorkspaceInitTest_CallEndpoint_Success)
             &arena);
     EXPECT(FS_CheckExists(serverWorkspaceDir));
 
+    Str serverTasksDir = FS_PathJoin(
+            serverWorkspaceDir,
+            Str_FromCStr("tasks"),
+            &arena);
+    EXPECT(FS_CheckExists(serverTasksDir));
+
     Str linkedConfigPath = FS_PathJoin(
             serverWorkspaceDir,
             Str_FromCStr("workspace.wmwscfg"),
@@ -84,3 +90,4 @@ TEST(WorkspaceInitTest_CallEndpoint_Success)
     // Deallocates arena
     ServerContext_Destroy();
 }
+

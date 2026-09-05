@@ -26,6 +26,7 @@ TEST(WorkspaceConfigTest_WriteRead_Success)
     WorkspaceConfig config = {
             .workspaceId   = 42,
             .workspaceName = Str_FromCStr("test_workspace"),
+            .nextTaskId    = 7,
     };
 
     PersistenceStatus writeStatus = WorkspaceConfig_Write(configPath, &config);
@@ -38,6 +39,7 @@ TEST(WorkspaceConfigTest_WriteRead_Success)
     ASSERT_EQ(readStatus, PERSISTENCE_STATUS_OK);
     EXPECT_EQ(readConfig.workspaceId, 42);
     EXPECT(Str_EqCStr(readConfig.workspaceName, "test_workspace"));
+    EXPECT_EQ(readConfig.nextTaskId, 7);
 
     Arena_Free(&arena);
 }
@@ -118,3 +120,4 @@ TEST(WorkspaceConfigTest_Read_WrongFormat)
 
     Arena_Free(&arena);
 }
+
