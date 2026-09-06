@@ -83,6 +83,7 @@ Command Command_WorkspaceDelete_Create(Arena* arena)
         .shortForm    = Str_FromCStr("-w"),
         .fullForm     = Str_FromCStr("--workspace"),
         .required     = FALSE,
+        .position     = ARG_POSITION_NONE,
         .value        = Str_CreateEmpty(),
         .initialized  = FALSE,
     };

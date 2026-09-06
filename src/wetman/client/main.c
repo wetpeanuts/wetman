@@ -8,6 +8,7 @@
 #include <wetman/client/commands/workspace_init.h>
 #include <wetman/client/commands/workspace_delete.h>
 #include <wetman/client/commands/workspace_list.h>
+#include <wetman/client/commands/task_new.h>
 
 #include <wetman/client/mod.c>
 
@@ -22,6 +23,7 @@ static void PrintUsage(FILE* out)
             "  workspace init           Initialize a workspace in the current directory\n"
             "  workspace delete         Delete the current workspace\n"
             "  workspace list           List all workspaces\n"
+            "  task new <name>          Create a new task\n"
             "\n"
             "Options:\n"
             "  -n, --name <name>        Workspace name (default: current directory name)\n"
@@ -38,6 +40,7 @@ int main(int argc, char** argv)
     CommandParser_RegisterCommand(&parser, Command_WorkspaceInit_Create(&globalClientContext.arena));
     CommandParser_RegisterCommand(&parser, Command_WorkspaceDelete_Create(&globalClientContext.arena));
     CommandParser_RegisterCommand(&parser, Command_WorkspaceList_Create(&globalClientContext.arena));
+    CommandParser_RegisterCommand(&parser, Command_TaskNew_Create(&globalClientContext.arena));
 
     if (argc < 2 ||
             strcmp(argv[1], "-h") == 0 ||

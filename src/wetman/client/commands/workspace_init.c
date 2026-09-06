@@ -83,6 +83,7 @@ Command Command_WorkspaceInit_Create(Arena* arena)
         .shortForm    = Str_FromCStr("-n"),
         .fullForm     = Str_FromCStr("--name"),
         .required     = FALSE,
+        .position     = ARG_POSITION_NONE,
         .value        = Str_CreateEmpty(),
         .initialized  = FALSE,
     };

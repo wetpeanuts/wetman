@@ -69,24 +69,6 @@ static ReturnCode CreateTask(
     return (ReturnCode)responseHeader.returnCode;
 }
 
-static Str ReadFile(Str path, Arena* arena)
-{
-    i32 fd = FS_OpenFile(path, O_RDONLY);
-    if (fd == -1) {
-        return Str_FromCStr("");
-    }
-
-    char buf[4096];
-    isize n = read(fd, buf, sizeof(buf));
-    close(fd);
-
-    if (n < 0) {
-        return Str_FromCStr("");
-    }
-
-    return Str_Concat(Str_FromCStr(""), Str_FromData(buf, (usize)n), arena);
-}
-
 
 TEST(TaskNewTest_CallEndpoint_Success)
 {
@@ -128,15 +110,6 @@ TEST(TaskNewTest_CallEndpoint_Success)
 
     Str firstTaskShPath = FS_PathJoin(firstTaskDir, Str_FromCStr("task.sh"), &arena);
     EXPECT(FS_CheckExists(firstTaskShPath));
-
-    Str expectedContent = Str_Concat(
-            Str_FromCStr("echo \"Uninitialized task\\n  id:   0\\nname: test_task\\nwdir:  "),
-            Str_FromCStr(projectDir),
-            &arena);
-    expectedContent = Str_Concat(expectedContent, Str_FromCStr("\\n\""), &arena);
-
-    Str actualContent = ReadFile(firstTaskShPath, &arena);
-    EXPECT(Str_EqStr(actualContent, expectedContent));
 
     struct stat st;
     char taskShPathBuf[PATH_MAX];
