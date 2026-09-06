@@ -2,3 +2,4 @@ build/
 .utils/
 .nvim/
 .test_wdir/
+.wetman/
