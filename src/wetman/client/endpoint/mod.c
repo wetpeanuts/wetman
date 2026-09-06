@@ -5,5 +5,6 @@
 #include <wetman/client/endpoint/workspace_init.c>
 #include <wetman/client/endpoint/workspace_delete.c>
 #include <wetman/client/endpoint/workspace_list.c>
+#include <wetman/client/endpoint/task_new.c>
 
 #endif // WETMAN_CLIENT_ENDPOINT_MOD_C

@@ -54,8 +54,9 @@ Command* CommandParser_Parse(CommandParser* self, int argc, char** argv)
             for (u32 a = 0; a < cmd->args.len; ++a) {
                 Arg* arg = &cmd->args.args[a];
 
-                if (Str_EqCStr(arg->shortForm, token) ||
-                        Str_EqCStr(arg->fullForm, token)) {
+                if (arg->position == ARG_POSITION_NONE &&
+                        (Str_EqCStr(arg->shortForm, token) ||
+                         Str_EqCStr(arg->fullForm, token))) {
                     if (argIndex + 1 >= argc) {
                         fprintf(stderr,
                                 "Missing value for option: %s\n",
@@ -71,7 +72,40 @@ Command* CommandParser_Parse(CommandParser* self, int argc, char** argv)
             }
 
             if (!found) {
-                fprintf(stderr, "Unknown option: %s\n", token);
+                if (token[0] == '-') {
+                    fprintf(stderr, "Unknown option: %s\n", token);
+                    return NULL;
+                }
+
+                Arg* target = NULL;
+                for (u32 a = 0; a < cmd->args.len; ++a) {
+                    Arg* arg = &cmd->args.args[a];
+                    if (arg->position >= 0 && !arg->initialized) {
+                        target = arg;
+                        break;
+                    }
+                }
+
+                if (target == NULL) {
+                    fprintf(stderr, "Unexpected argument: %s\n", token);
+                    return NULL;
+                }
+
+                target->value = Str_FromCStr(token);
+                target->initialized = TRUE;
+                argIndex += 1;
+            }
+        }
+
+        for (u32 a = 0; a < cmd->args.len; ++a) {
+            Arg* arg = &cmd->args.args[a];
+            if (arg->required && !arg->initialized) {
+                if (arg->position >= 0) {
+                    fprintf(stderr, "Missing required argument\n");
+                } else {
+                    fprintf(stderr, "Missing required option: %s\n",
+                            arg->fullForm.len > 0 ? arg->fullForm.data : arg->shortForm.data);
+                }
                 return NULL;
             }
         }

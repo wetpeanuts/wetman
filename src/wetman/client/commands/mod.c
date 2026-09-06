@@ -7,5 +7,6 @@
 #include <wetman/client/commands/workspace_init.c>
 #include <wetman/client/commands/workspace_delete.c>
 #include <wetman/client/commands/workspace_list.c>
+#include <wetman/client/commands/task_new.c>
 
 #endif // WETMAN_CLIENT_COMMANDS_MOD_C
