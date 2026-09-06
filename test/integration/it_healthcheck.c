@@ -13,7 +13,14 @@ TEST(IntegrationTest_HealthCheck_NoServerRunning)
 
 TEST(IntegrationTest_HealthCheck_Success)
 {
-    pid_t serverPid = Subprocess_RunCommand("../build/wetman_server");
+    char wdir[256];
+    CREATE_TMP_DIR(wdir);
+
+    char serverCmd[512];
+    snprintf(serverCmd, sizeof(serverCmd),
+            "WETMAN_WDIR=%s ../build/wetman_server", wdir);
+
+    pid_t serverPid = Subprocess_RunCommand(serverCmd);
     ASSERT_NE(serverPid, -1);
 
     sleep(1);

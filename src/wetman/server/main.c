@@ -16,10 +16,13 @@
 int main(void)
 {
     Arena arena = Arena_New();
-    Str wdir = FS_PathJoin(
-            Str_FromCStr(getenv("HOME")),
-            Str_FromCStr(".wetman"),
-            &arena);
+    char *wdirEnv = getenv("WETMAN_WDIR");
+    Str wdir = wdirEnv
+            ? Str_FromCStr(wdirEnv)
+            : FS_PathJoin(
+                    Str_FromCStr(getenv("HOME")),
+                    Str_FromCStr(".wetman"),
+                    &arena);
 
     FS_CreateDir(wdir);
 
