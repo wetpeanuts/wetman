@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p build
+      - run: ./scripts/build_wetman.sh
+      - run: ./scripts/build_wetman_server.sh
+      - run: ./scripts/build_wetman_test.sh
+      - run: ./build/wetman_test
