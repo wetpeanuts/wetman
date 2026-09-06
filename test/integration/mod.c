@@ -1,6 +1,7 @@
 #include <wetman/utils/test/macro.h>
 
 #include "it_healthcheck.c"
+#include "it_workspace.c"
 
 // Tmp dir macros work only in the context of the test case,
 // so we need to wrap it into a separate test
@@ -37,11 +38,14 @@ void registerIntegrationTests(void)
 {
     // Tests without running server
     REGISTER_TEST(IntegrationTest_HealthCheck_NoServerRunning);
+    REGISTER_TEST(IntegrationTest_Workspace_NoServerRunning);
 
     // Tests required server instance running
     REGISTER_TEST(IntegrationTest_RunServer);
 
     REGISTER_TEST(IntegrationTest_HealthCheck_Success);
+    REGISTER_TEST(IntegrationTest_Workspace_InitDelete_DefaultArgs);
+    REGISTER_TEST(IntegrationTest_Workspace_InitDelete_NamedArgs);
 
     REGISTER_TEST(IntegrationTest_ShutDownServer);
 }

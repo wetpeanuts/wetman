@@ -25,11 +25,6 @@ static i32 __Command_WorkspaceList_Handler(const Args* args, Arena* arena)
         return (i32)returnCode;
     }
 
-    if (response.workspaceIds.len == 0) {
-        printf("No workspaces found\n");
-        return 0;
-    }
-
     Str idHeader    = Str_FromCStr("ID");
     Str nameHeader  = Str_FromCStr("Name");
     Str pathHeader  = Str_FromCStr("Path");
