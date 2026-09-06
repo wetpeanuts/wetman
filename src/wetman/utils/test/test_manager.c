@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,9 +24,9 @@ const char* __resultLabel(i32 success)
 void __timeToStr(char* buf, usize bufLen, i64 ts)
 {
     if (ts > 1000) {
-        snprintf(buf, bufLen, "%llds", ts / 1000);
+        snprintf(buf, bufLen, "%" PRId64 "s", ts / 1000);
     } else {
-        snprintf(buf, bufLen, "%lldms", ts);
+        snprintf(buf, bufLen, "%" PRId64 "ms", ts);
     }
 }
 

@@ -2,6 +2,7 @@
 #include <wetman/utils/filesystem.h>
 
 #include <fcntl.h>
+#include <sys/file.h>
 #include <unistd.h>
 #include <stdio.h>
 
@@ -10,8 +11,13 @@ static Str  __serverLockPath   = {0};
 
 bool ServerLock_Acquire(Str lockFilePath)
 {
-    __serverLockFd = FS_OpenFile(lockFilePath, O_CREAT | O_RDWR | O_EXLOCK | O_NONBLOCK);
+    __serverLockFd = FS_OpenFile(lockFilePath, O_CREAT | O_RDWR | O_NONBLOCK);
     if (__serverLockFd < 0) {
+        return false;
+    }
+    if (flock(__serverLockFd, LOCK_EX | LOCK_NB) != 0) {
+        close(__serverLockFd);
+        __serverLockFd = -1;
         return false;
     }
     __serverLockPath = lockFilePath;

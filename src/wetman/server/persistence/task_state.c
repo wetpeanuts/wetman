@@ -4,6 +4,7 @@
 #include <wetman/utils/filesystem.h>
 
 #include <fcntl.h>
+#include <sys/file.h>
 #include <unistd.h>
 
 
@@ -14,11 +15,12 @@ TaskState TaskState_Read(
 {
     TaskState taskState = {0};
 
-    i32 fd = FS_OpenFile(filePath, O_RDONLY | O_EXLOCK);
+    i32 fd = FS_OpenFile(filePath, O_RDONLY);
     if (fd == -1) {
         *status = PERSISTENCE_STATUS_FILE_DOES_NOT_EXIST;
         return taskState;
     }
+    flock(fd, LOCK_SH);
     // TODO: Allow read without setting max len
     DataStream dataStream = DataStream_Read(fd, arena, 4096);
 
@@ -40,10 +42,11 @@ PersistenceStatus TaskState_Write(
         Str                filePath,
         const TaskState*   taskState)
 {
-    i32 fd = FS_OpenFile(filePath, O_WRONLY | O_TRUNC | O_EXLOCK);
+    i32 fd = FS_OpenFile(filePath, O_WRONLY | O_TRUNC);
     if (fd == -1) {
         return PERSISTENCE_STATUS_FILE_DOES_NOT_EXIST;
     }
+    flock(fd, LOCK_EX);
 
     Arena arena = Arena_New();
     DataStream dataStream = DataStream_New();
