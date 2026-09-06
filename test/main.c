@@ -6,6 +6,7 @@
 #include "shared/mod.c"
 #include "utils/mod.c"
 #include "server/mod.c"
+#include "integration/mod.c"
 
 
 int main(void)
@@ -13,6 +14,7 @@ int main(void)
     registerUtilTests();
     registerServerTests();
     registerSharedTests();
+    registerIntegrationTests();
 
     RUN_TESTS_IN_WDIR(".test_wdir");
 }
