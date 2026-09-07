@@ -5,6 +5,7 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/endpoint.h>
+#include <wetman/utils/net/message.h>
 
 
 typedef struct {
@@ -18,37 +19,37 @@ typedef struct {
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestSerializer(
         Endpoint_WorkspaceInit_Request* req,
-        DataStream*                     ds,
+        Message*                        message,
         Arena*                          arena)
 {
-    DataStream_PushStr(ds, req->workspacePath, arena);
-    DataStream_PushStr(ds, req->workspaceName, arena);
+    DataStream_PushStr(&message->bodyStream, req->workspacePath, arena);
+    DataStream_PushStr(&message->bodyStream, req->workspaceName, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestDeserializer(
         Endpoint_WorkspaceInit_Request* req,
-        DataStream*                     ds,
+        Message*                        message,
         Arena*                          arena)
 {
-    req->workspacePath = DataStream_PopStr(ds);
-    req->workspaceName = DataStream_PopStr(ds);
+    req->workspacePath = DataStream_PopStr(&message->bodyStream);
+    req->workspaceName = DataStream_PopStr(&message->bodyStream);
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseSerializer(
         Endpoint_WorkspaceInit_Response* resp,
-        DataStream*                      ds,
+        Message*                         message,
         Arena*                           arena)
 {
-    DataStream_PushU64(ds, (u64)resp->workspaceId, arena);
+    DataStream_PushU64(&message->bodyStream, (u64)resp->workspaceId, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseDeserializer(
         Endpoint_WorkspaceInit_Response* resp,
-        DataStream*                      ds,
+        Message*                         message,
         Arena*                           arena)
 {
-    resp->workspaceId = (usize)DataStream_PopU64(ds);
+    resp->workspaceId = (usize)DataStream_PopU64(&message->bodyStream);
     (void)arena;
 }
 

@@ -6,14 +6,17 @@
 #include <wetman/utils/data_struct/slice_i64.h>
 #include <wetman/utils/data_struct/slice_str.h>
 #include <wetman/utils/macro.h>
+#include <wetman/utils/net/fd_stream.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 
 #define __DATA_STREAM_BUF_LEN 256
+#define __DATA_STREAM_MAX_FDS_PER_MESSAGE 64
 
 typedef enum {
     DATA_TYPE_I32,
@@ -72,6 +75,98 @@ DataStream DataStream_Read(int fd, Arena* arena, isize maxLen)
 void DataStream_Write(DataStream* dataStream, int fd)
 {
     isize writtenLen = write(fd, dataStream->__data.data, dataStream->__data.len);
+    if (writtenLen != (isize)dataStream->__data.len) {
+        dataStream->lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
+        return;
+    }
+
+    dataStream->lastResult = DATA_STREAM_RESULT_SUCCESS;
+}
+
+void DataStream_CollectFds(struct msghdr* msg, FdStream* fdStream, Arena* arena)
+{
+    struct cmsghdr* cmsg;
+    for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+            cmsg = CMSG_NXTHDR(msg, cmsg)) {
+        if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS) {
+            continue;
+        }
+
+        const usize fdCount = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+        int* fds = (int*)CMSG_DATA(cmsg);
+        for (usize i = 0; i < fdCount; i++) {
+            FdStream_Push(fdStream, fds[i], arena);
+        }
+    }
+}
+
+DataStream DataStream_ReadMsg(int fd, Arena* arena, isize maxLen, FdStream* fdStream)
+{
+    DataSlice data = Str_FromCStr("");
+    char buf[__DATA_STREAM_BUF_LEN];
+    char controlBuf[CMSG_SPACE(__DATA_STREAM_MAX_FDS_PER_MESSAGE * sizeof(int))];
+    isize readLen = 0;
+
+    while (readLen < maxLen) {
+        const isize chunkLen = MIN(__DATA_STREAM_BUF_LEN, maxLen - readLen);
+        struct iovec iov = {
+            .iov_base = buf,
+            .iov_len  = (usize)chunkLen,
+        };
+
+        struct msghdr msg;
+        memset(&msg, 0, sizeof(msg));
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+        msg.msg_control = controlBuf;
+        msg.msg_controllen = sizeof(controlBuf);
+
+        isize n = recvmsg(fd, &msg, 0);
+        if (n <= 0) {
+            break;
+        }
+
+        DataStream_CollectFds(&msg, fdStream, arena);
+
+        readLen += n;
+        DataSlice dataChunk = {
+            .data = buf,
+            .len  = (usize)n,
+        };
+        data = Str_Concat(data, dataChunk, arena);
+    }
+
+    return DataStream_WithData(data);
+}
+
+void DataStream_WriteMsg(DataStream* dataStream, int fd, FdStream* fdStream)
+{
+    char controlBuf[CMSG_SPACE(__DATA_STREAM_MAX_FDS_PER_MESSAGE * sizeof(int))];
+    memset(controlBuf, 0, sizeof(controlBuf));
+
+    struct iovec iov = {
+        .iov_base = dataStream->__data.data,
+        .iov_len  = dataStream->__data.len,
+    };
+
+    struct msghdr msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+    const usize fdCount = FdStream_Count(fdStream);
+    if (fdCount > 0) {
+        msg.msg_control = controlBuf;
+        msg.msg_controllen = CMSG_SPACE(fdCount * sizeof(int));
+
+        struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+        cmsg->cmsg_level = SOL_SOCKET;
+        cmsg->cmsg_type = SCM_RIGHTS;
+        cmsg->cmsg_len = CMSG_LEN(fdCount * sizeof(int));
+        memcpy(CMSG_DATA(cmsg), FdStream_Data(fdStream), fdCount * sizeof(int));
+    }
+
+    isize writtenLen = sendmsg(fd, &msg, 0);
     if (writtenLen != (isize)dataStream->__data.len) {
         dataStream->lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
         return;

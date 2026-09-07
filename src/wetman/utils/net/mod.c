@@ -3,6 +3,8 @@
 
 #include <wetman/utils/net/endpoint.c>
 #include <wetman/utils/net/endpoint_registry.c>
+#include <wetman/utils/net/fd.c>
+#include <wetman/utils/net/fd_stream.c>
 #include <wetman/utils/net/message.c>
 #include <wetman/utils/net/server.c>
 

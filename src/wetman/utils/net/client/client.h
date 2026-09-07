@@ -4,15 +4,16 @@
 #include <wetman/utils/data_stream.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/endpoint.h>
+#include <wetman/utils/net/message.h>
 #include <wetman/utils/net/return_code.h>
 
 
 typedef struct Client Client;
 
-typedef DataStream (*ClientRequestHandler)(
-        Client*     client,
-        DataStream* requestData,
-        Arena*      arena);
+typedef Message (*ClientRequestHandler)(
+        Client*  client,
+        Message* requestMessage,
+        Arena*   arena);
 
 typedef void(*ClientDisconnectHandler)(Client* client);
 
@@ -25,10 +26,10 @@ struct Client {
 };
 
 ReturnCode Client_CallEndpoint(
-        Client*     client,
-        EndpointId  endpointId,
-        Arena*      arena,
-        DataStream* requestBody,
-        DataStream* responseData);
+        Client*  client,
+        EndpointId endpointId,
+        Arena*   arena,
+        Message* requestMessage,
+        Message* responseMessage);
 
 #endif // WETMAN_UTILS_NET_CLIENT_CLIENT_H

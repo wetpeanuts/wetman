@@ -5,12 +5,12 @@
 #include <stdio.h>
 
 
-DataStream Endpoint_Call(
-        Endpoint*   endpoint,
-        Arena*      arena,
-        DataStream* requestData)
+Message Endpoint_Call(
+        Endpoint* endpoint,
+        Arena*    arena,
+        Message*  requestMessage)
 {
-    DataStream responseData = DataStream_New();
+    Message responseMessage = Message_New();
     ResponseHeader responseHeader = {
         .returnCode = RETURN_CODE_OK,
         .msgLen     = 0,
@@ -19,30 +19,31 @@ DataStream Endpoint_Call(
     if (endpoint->handler == NULL) {
         fprintf(stderr, "Attempt to call non initialized endpoint\n");
         responseHeader.returnCode = RETURN_CODE_ENDPOINT_NOT_INITIALIZED;
-        ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-        return responseData;
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        return responseMessage;
     }
 
     void* request = endpoint->requestFactory(arena);
     void* response = endpoint->responseFactory(arena);
-    endpoint->requestDeserializer(request, requestData, arena);
+    endpoint->requestDeserializer(request, requestMessage, arena);
 
-    if (requestData->lastResult != DATA_STREAM_RESULT_SUCCESS) {
-        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestData->lastResult);
+    if (requestMessage->bodyStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestMessage->bodyStream.lastResult);
         responseHeader.returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST;
-        ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-        return responseData;
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        return responseMessage;
     }
 
     ReturnCode returnCode = endpoint->handler(request, response);
 
-    DataStream responseBodyData = DataStream_New();
-    endpoint->responseSerializer(response, &responseBodyData, arena);
+    Message responseBodyMessage = Message_New();
+    endpoint->responseSerializer(response, &responseBodyMessage, arena);
     responseHeader.returnCode = returnCode;
-    responseHeader.msgLen = responseBodyData.__data.len;
+    responseHeader.msgLen = responseBodyMessage.bodyStream.__data.len;
 
-    ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-    DataStream_Append(&responseData, &responseBodyData, arena);
+    responseMessage.fdStream = responseBodyMessage.fdStream;
+    ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+    DataStream_Append(&responseMessage.bodyStream, &responseBodyMessage.bodyStream, arena);
 
-    return responseData;
+    return responseMessage;
 }

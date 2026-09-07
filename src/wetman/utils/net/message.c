@@ -1,6 +1,25 @@
 #include <wetman/utils/net/message.h>
 
 
+Message Message_New(void)
+{
+    Message message = {
+        .bodyStream = DataStream_New(),
+        .fdStream   = FdStream_New(),
+    };
+    return message;
+}
+
+void Message_WriteFd(Message* message, FileDescriptor fd, Arena* arena)
+{
+    FdStream_Push(&message->fdStream, fd.fd, arena);
+}
+
+FileDescriptor Message_ReadFd(Message* message)
+{
+    return FileDescriptor_New(FdStream_Pop(&message->fdStream));
+}
+
 void RequestHeader_Serialize(
         RequestHeader const* requestHeader,
         DataStream*          dataStream,

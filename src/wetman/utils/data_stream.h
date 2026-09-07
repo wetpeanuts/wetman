@@ -8,7 +8,10 @@
 #include <wetman/utils/data_struct/slice_str.h>
 #include <wetman/utils/data_struct/str.h>
 #include <wetman/utils/mem/arena.h>
+#include <wetman/utils/net/fd_stream.h>
 #include <wetman/utils/type.h>
+
+#include <sys/socket.h>
 
 
 typedef Str DataSlice;
@@ -33,8 +36,12 @@ DataStream DataStream_New(void);
 DataStream DataStream_WithData(DataSlice data);
 
 DataStream DataStream_Read(int fd, Arena* arena, isize maxLen);
+DataStream DataStream_ReadMsg(int fd, Arena* arena, isize maxLen, FdStream* fdStream);
 void DataStream_Write(DataStream* dataStream, int fd);
+void DataStream_WriteMsg(DataStream* dataStream, int fd, FdStream* fdStream);
 void DataStream_Append(DataStream* dest, const DataStream* src, Arena* arena);
+
+void DataStream_CollectFds(struct msghdr* msg, FdStream* fdStream, Arena* arena);
 
 void DataStream_PushI32(DataStream* dataStream, i32 value, Arena* arena);
 i32 DataStream_PopI32(DataStream* dataStream);

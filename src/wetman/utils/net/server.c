@@ -22,6 +22,7 @@
 
 #define __SERVER_MAX_CONNECTION_QUEUE_LEN 16
 #define __SERVER_MAX_CLIENTS 64
+#define __SERVER_MAX_FDS_PER_MESSAGE 64
 
 
 int __Server_CreateSocket(const char* socketPath)
@@ -82,15 +83,18 @@ typedef struct {
     char*       bodyBuf;
     usize       readLen;
     usize       readTarget;
+    FdStream    requestFds; // file descriptors received with the request
 
     RequestHeader reqHeader; // parsed from headerBuf once header read completes
 
     // Response writing
-    //   response:     serialized response DataStream (header + body), populated
-    //                 by EndpointRegistry_CallEndpoint after request is fully read
-    //   writeOffset:  bytes of response already written to the client socket
-    DataStream  response;
+    //   responseMessage: Message (header + body + fds) produced by
+    //                    EndpointRegistry_CallEndpoint after request is fully read
+    //   writeOffset:     bytes of the response body already written
+    //   responseFdsSent: whether the response's fds have been handed to sendmsg
+    Message     responseMessage;
     usize       writeOffset;
+    int         responseFdsSent;
 
     Arena       arena;      // per-request arena, freed on disconnect
 } __ClientConn;
@@ -108,6 +112,11 @@ void __Server_DisconnectConn(__ClientConn* conn)
     if (conn->fd >= 0) {
         close(conn->fd);
         conn->fd = -1;
+    }
+    // Close any request fds that were not consumed by the endpoint handler.
+    const usize unreadFdCount = FdStream_Count(&conn->requestFds);
+    for (usize i = 0; i < unreadFdCount; i++) {
+        close(conn->requestFds.data[conn->requestFds.readPos + i]);
     }
     if (Arena_IsValid(&conn->arena)) {
         Arena_Free(&conn->arena);
@@ -141,7 +150,9 @@ void __Server_AcceptClient(__ServerMainContext* ctx)
             conn->bodyBuf    = NULL;
             conn->readLen    = 0;
             conn->readTarget = REQUEST_HEADER_SERIALIZED_LEN;
+            conn->requestFds = FdStream_New();
             conn->writeOffset = 0;
+            conn->responseFdsSent = 1;
             conn->arena      = Arena_New();
             printf("Client connected (slot %d)\n", i);
             return;
@@ -155,37 +166,68 @@ void __Server_AcceptClient(__ServerMainContext* ctx)
 
 void __Server_ProcessRequest(__ClientConn* conn, EndpointRegistry* endpointRegistry)
 {
-    DataSlice bodyData;
+    Message requestMessage = Message_New();
+
     if (conn->bodyBuf) {
-        bodyData = (DataSlice){
+        requestMessage.bodyStream = DataStream_WithData((DataSlice){
             .data = conn->bodyBuf,
             .len  = conn->reqHeader.msgLen,
-        };
+        });
     } else {
-        bodyData = (DataSlice){ .data = "", .len = 0 };
+        requestMessage.bodyStream = DataStream_WithData((DataSlice){ .data = "", .len = 0 });
     }
-    DataStream requestData = DataStream_WithData(bodyData);
+    requestMessage.fdStream = conn->requestFds;
 
     printf("Calling endpoint %d\n", conn->reqHeader.endpointId);
 
-    conn->response = EndpointRegistry_CallEndpoint(
+    conn->responseMessage = EndpointRegistry_CallEndpoint(
             endpointRegistry,
             conn->reqHeader.endpointId,
             &conn->arena,
-            &requestData);
+            &requestMessage);
+
+    // Sync back the fds consumed by the request deserializer so disconnect
+    // cleanup only closes the ones the handler did not take ownership of.
+    conn->requestFds.readPos = requestMessage.fdStream.readPos;
 
     conn->writeOffset = 0;
+    conn->responseFdsSent = (FdStream_Count(&conn->responseMessage.fdStream) == 0);
     conn->state = CONN_STATE_WRITE;
 }
 
+
+isize __Server_ReadWithFds(int fd, void* buf, usize len, FdStream* fdStream, Arena* arena)
+{
+    char controlBuf[CMSG_SPACE(__SERVER_MAX_FDS_PER_MESSAGE * sizeof(int))];
+
+    struct iovec iov = {
+        .iov_base = buf,
+        .iov_len  = len,
+    };
+
+    struct msghdr msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = controlBuf;
+    msg.msg_controllen = sizeof(controlBuf);
+
+    isize n = recvmsg(fd, &msg, 0);
+    if (n > 0) {
+        DataStream_CollectFds(&msg, fdStream, arena);
+    }
+    return n;
+}
 
 void __Server_HandleReadable(__ClientConn* conn, EndpointRegistry* endpointRegistry)
 {
     if (conn->state == CONN_STATE_READ_HEADER) {
         while (conn->readLen < conn->readTarget) {
-            isize n = read(conn->fd,
+            isize n = __Server_ReadWithFds(conn->fd,
                     conn->headerBuf + conn->readLen,
-                    conn->readTarget - conn->readLen);
+                    conn->readTarget - conn->readLen,
+                    &conn->requestFds,
+                    &conn->arena);
             if (n > 0) {
                 conn->readLen += (usize)n;
                 continue;
@@ -236,9 +278,11 @@ void __Server_HandleReadable(__ClientConn* conn, EndpointRegistry* endpointRegis
 
     if (conn->state == CONN_STATE_READ_BODY) {
         while (conn->readLen < conn->readTarget) {
-            isize n = read(conn->fd,
+            isize n = __Server_ReadWithFds(conn->fd,
                     conn->bodyBuf + conn->readLen,
-                    conn->readTarget - conn->readLen);
+                    conn->readTarget - conn->readLen,
+                    &conn->requestFds,
+                    &conn->arena);
             if (n > 0) {
                 conn->readLen += (usize)n;
                 continue;
@@ -260,15 +304,56 @@ void __Server_HandleReadable(__ClientConn* conn, EndpointRegistry* endpointRegis
 }
 
 
+isize __Server_SendWithFds(int fd, const void* data, usize len, FdStream* fdStream)
+{
+    char controlBuf[CMSG_SPACE(__SERVER_MAX_FDS_PER_MESSAGE * sizeof(int))];
+    memset(controlBuf, 0, sizeof(controlBuf));
+
+    struct iovec iov = {
+        .iov_base = (void*)data,
+        .iov_len  = len,
+    };
+
+    struct msghdr msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+    const usize fdCount = FdStream_Count(fdStream);
+    if (fdCount > 0) {
+        msg.msg_control = controlBuf;
+        msg.msg_controllen = CMSG_SPACE(fdCount * sizeof(int));
+
+        struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+        cmsg->cmsg_level = SOL_SOCKET;
+        cmsg->cmsg_type = SCM_RIGHTS;
+        cmsg->cmsg_len = CMSG_LEN(fdCount * sizeof(int));
+        memcpy(CMSG_DATA(cmsg), FdStream_Data(fdStream), fdCount * sizeof(int));
+    }
+
+    return sendmsg(fd, &msg, 0);
+}
+
 void __Server_HandleWritable(__ClientConn* conn)
 {
-    const char* data    = conn->response.__data.data + conn->writeOffset;
-    usize       remaining = conn->response.__data.len - conn->writeOffset;
+    const char* data    = conn->responseMessage.bodyStream.__data.data + conn->writeOffset;
+    usize       remaining = conn->responseMessage.bodyStream.__data.len - conn->writeOffset;
 
-    isize n = write(conn->fd, data, remaining);
+    isize n;
+    if (!conn->responseFdsSent) {
+        n = __Server_SendWithFds(conn->fd, data, remaining, &conn->responseMessage.fdStream);
+        // On any positive send the fds have been handed to the kernel; the
+        // leftovers (if any) must be sent without a control message.
+        if (n > 0) {
+            conn->responseFdsSent = 1;
+        }
+    } else {
+        n = write(conn->fd, data, remaining);
+    }
+
     if (n > 0) {
         conn->writeOffset += (usize)n;
-        if (conn->writeOffset >= conn->response.__data.len) {
+        if (conn->writeOffset >= conn->responseMessage.bodyStream.__data.len) {
             printf("Response fully sent\n");
             __Server_DisconnectConn(conn);
         }

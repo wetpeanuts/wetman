@@ -27,15 +27,15 @@ static ReturnCode InitTestWorkspace(
         .workspaceName = Str_FromCStr(workspaceName),
     };
 
-    DataStream requestData = DataStream_New();
-    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestData, arena);
+    Message requestMessage = Message_New();
+    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestMessage, arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             endpointRegistry,
             ENDPOINT_ID_WORKSPACE_INIT,
             arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
 
     return (ReturnCode)responseHeader.returnCode;
 }
@@ -52,18 +52,18 @@ static ReturnCode CreateTask(
         .taskName    = Str_FromCStr(taskName),
     };
 
-    DataStream requestData = DataStream_New();
-    Endpoint_TaskNew_RequestSerializer(&request, &requestData, arena);
+    Message requestMessage = Message_New();
+    Endpoint_TaskNew_RequestSerializer(&request, &requestMessage, arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             endpointRegistry,
             ENDPOINT_ID_TASK_NEW,
             arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
 
     if (responseHeader.returnCode == RETURN_CODE_OK) {
-        Endpoint_TaskNew_ResponseDeserializer(response, &responseData, arena);
+        Endpoint_TaskNew_ResponseDeserializer(response, &responseMessage, arena);
     }
 
     return (ReturnCode)responseHeader.returnCode;

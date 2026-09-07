@@ -19,15 +19,15 @@ static ReturnCode InitWorkspace(
         .workspaceName = Str_FromCStr(workspaceName),
     };
 
-    DataStream requestData = DataStream_New();
-    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestData, arena);
+    Message requestMessage = Message_New();
+    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestMessage, arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             endpointRegistry,
             ENDPOINT_ID_WORKSPACE_INIT,
             arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
 
     return (ReturnCode)responseHeader.returnCode;
 }
@@ -59,21 +59,21 @@ TEST(WorkspaceListTest_CallEndpoint_Success)
     Endpoint_WorkspaceList_Request request = {
         .__dummy = 0,
     };
-    DataStream requestData = DataStream_New();
-    Endpoint_WorkspaceList_RequestSerializer(&request, &requestData, &arena);
+    Message requestMessage = Message_New();
+    Endpoint_WorkspaceList_RequestSerializer(&request, &requestMessage, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_WORKSPACE_LIST,
             &arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     EXPECT(responseHeader.msgLen > 0);
 
     Endpoint_WorkspaceList_Response response;
-    Endpoint_WorkspaceList_ResponseDeserializer(&response, &responseData, &arena);
+    Endpoint_WorkspaceList_ResponseDeserializer(&response, &responseMessage, &arena);
 
     EXPECT_EQ(response.workspaceIds.len, 2);
     EXPECT_EQ(response.workspaceNames.len, response.workspaceIds.len);
@@ -106,20 +106,20 @@ TEST(WorkspaceListTest_CallEndpoint_Empty)
     Endpoint_WorkspaceList_Request request = {
         .__dummy = 0,
     };
-    DataStream requestData = DataStream_New();
-    Endpoint_WorkspaceList_RequestSerializer(&request, &requestData, &arena);
+    Message requestMessage = Message_New();
+    Endpoint_WorkspaceList_RequestSerializer(&request, &requestMessage, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_WORKSPACE_LIST,
             &arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
 
     Endpoint_WorkspaceList_Response response;
-    Endpoint_WorkspaceList_ResponseDeserializer(&response, &responseData, &arena);
+    Endpoint_WorkspaceList_ResponseDeserializer(&response, &responseMessage, &arena);
 
     EXPECT_EQ(response.workspaceIds.len, 0);
     EXPECT_EQ(response.workspaceNames.len, 0);
