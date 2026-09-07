@@ -15,4 +15,6 @@ Str Str_FromU64(u64 value, Arena* arena);
 int Str_EqStr(Str s1, Str s2);
 int Str_EqCStr(Str s1, const char* s2);
 
+isize Str_Contains(Str haystack, Str needle);
+
 #endif // WETMAN_UTILS_STR_H
