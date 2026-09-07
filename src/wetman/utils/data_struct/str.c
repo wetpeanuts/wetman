@@ -52,3 +52,18 @@ int Str_EqCStr(Str s1, const char* s2)
     return Str_EqStr(s1, Str_FromCStr(s2));
 }
 
+isize Str_Contains(Str haystack, Str needle)
+{
+    if (needle.len == 0) {
+        return 0;
+    }
+    if (needle.len > haystack.len) {
+        return -1;
+    }
+    void* found = memmem(haystack.data, haystack.len, needle.data, needle.len);
+    if (found == NULL) {
+        return -1;
+    }
+    return (isize)((const char*)found - haystack.data);
+}
+
