@@ -47,8 +47,8 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
 - Endpoint (de)serializers take a single `Message*` (see "Data structures &
   serialization") instead of a `DataStream*`: `(req, Message*, Arena*)`.
   Inline serializers write to `&message->bodyStream`; FDs go through
-  `Message_WriteFd(message, FileDescriptor_New(fd), arena)` /
-  `Message_ReadFd(message)`.
+  `FdStream_Push(&message->fdStream, ..., arena)` /
+  `FdStream_Pop(&message->fdStream)` just like body fields.
 - Global server state lives in `ServerContext` (`server/context.[ch]`), set up
   via `ServerContext_Init(arena, wdir)` from `server/main.c`; workspaces are
   stored under `<wdir>/workspaces/<id>` and the id counter persists in
@@ -116,14 +116,15 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `FdStream_New/Push/Pop/Count/Data`, arena-backed with a pop cursor. It is
   never type-tagged into the byte stream; fds travel as `SCM_RIGHTS` ancillary
   data attached to the `recvmsg`/`sendmsg` call (max 64 fds per message,
-  `__DATA_STREAM_MAX_FDS_PER_MESSAGE`). `FileDescriptor` (`utils/net/fd.h`)
+  `__MESSAGE_MAX_FDS_PER_MESSAGE`). `FileDescriptor` (`utils/net/fd.h`)
   wraps a raw `int fd` with `FILE_DESCRIPTOR_INVALID (-1)`.
 - `Message` (`utils/net/message.h`) bundles `DataStream bodyStream` +
-  `FdStream fdStream`; every endpoint (de)serializer takes a single `Message*`.
-  `DataStream_WriteMsg(body, fd, &fdStream)` writes body+fds over a socket;
-  `DataStream_ReadMsg(fd, arena, maxLen, &fdStream)` reads one message segment,
-  collecting any attached fds into the given `FdStream`. Handlers attach FDs
-  with `Message_WriteFd`, consumers fetch them with `Message_ReadFd`.
+  `FdStream fdStream`; every endpoint (de)serializer takes a single
+  `Message*`. `Message_Write(message, fd)` writes body+fds over a socket;
+  `Message_Read(fd, arena, maxLen)` reads one message segment, collecting any
+  attached fds into `fdStream`. Serializers attach FDs with
+  `FdStream_Push(&message->fdStream, ..., arena)`, deserializers fetch them
+  with `FdStream_Pop(&message->fdStream)`.
 - The server transport (`utils/net/server.c`) keeps a `Message responseMessage`
   + `FdStream requestFds` per connection; response fds are sent on the first
   segment (`responseFdsSent` flag), unconsumed request fds are closed on

@@ -20,7 +20,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_RequestSerializer(
         Message*                    message,
         Arena*                      arena)
 {
-    Message_WriteFd(message, req->fd, arena);
+    FdStream_Push(&message->fdStream, req->fd, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoFd_RequestDeserializer(
@@ -28,7 +28,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_RequestDeserializer(
         Message*                    message,
         Arena*                      arena)
 {
-    req->fd = Message_ReadFd(message);
+    req->fd = FdStream_Pop(&message->fdStream);
     (void)arena;
 }
 
@@ -37,7 +37,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_ResponseSerializer(
         Message*                     message,
         Arena*                       arena)
 {
-    Message_WriteFd(message, resp->fd, arena);
+    FdStream_Push(&message->fdStream, resp->fd, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoFd_ResponseDeserializer(
@@ -45,7 +45,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_ResponseDeserializer(
         Message*                     message,
         Arena*                       arena)
 {
-    resp->fd = Message_ReadFd(message);
+    resp->fd = FdStream_Pop(&message->fdStream);
     (void)arena;
 }
 

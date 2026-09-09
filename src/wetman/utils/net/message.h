@@ -22,10 +22,11 @@ typedef struct Message {
 
 Message Message_New(void);
 
-// Write an fd into the message's fdStream.
-void Message_WriteFd(Message* message, FileDescriptor fd, Arena* arena);
-// Read the next fd from the message's fdStream.
-FileDescriptor Message_ReadFd(Message* message);
+// Read one message segment (bytes into bodyStream, attached fds into fdStream)
+// from the given socket. Mirrors DataStream_Read.
+Message Message_Read(int fd, Arena* arena, isize maxLen);
+// Write the message body + fds over the given socket. Mirrors DataStream_Write.
+void Message_Write(Message* message, int fd);
 
 typedef struct {
     EndpointId endpointId;

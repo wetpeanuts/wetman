@@ -1,6 +1,7 @@
 #include <wetman/utils/data_stream.h>
 #include <wetman/utils/macro.h>
 #include <wetman/utils/net/fd_stream.h>
+#include <wetman/utils/net/message.h>
 #include <wetman/utils/test/macro.h>
 
 #include <fcntl.h>
@@ -16,19 +17,19 @@ TEST(FdStreamTest_PushPopCount)
 
     ASSERT_EQ(FdStream_Count(&fdStream), 0);
 
-    EXPECT_EQ(FdStream_Push(&fdStream, 1, &arena), 0);
-    EXPECT_EQ(FdStream_Push(&fdStream, 2, &arena), 0);
-    EXPECT_EQ(FdStream_Push(&fdStream, 3, &arena), 0);
+    EXPECT_EQ(FdStream_Push(&fdStream, FileDescriptor_New(1), &arena), 0);
+    EXPECT_EQ(FdStream_Push(&fdStream, FileDescriptor_New(2), &arena), 0);
+    EXPECT_EQ(FdStream_Push(&fdStream, FileDescriptor_New(3), &arena), 0);
     EXPECT_EQ(FdStream_Count(&fdStream), 3);
 
-    EXPECT_EQ(FdStream_Pop(&fdStream), 1);
-    EXPECT_EQ(FdStream_Pop(&fdStream), 2);
+    EXPECT_EQ(FdStream_Pop(&fdStream).fd, 1);
+    EXPECT_EQ(FdStream_Pop(&fdStream).fd, 2);
     EXPECT_EQ(FdStream_Count(&fdStream), 1);
-    EXPECT_EQ(FdStream_Pop(&fdStream), 3);
+    EXPECT_EQ(FdStream_Pop(&fdStream).fd, 3);
     EXPECT_EQ(FdStream_Count(&fdStream), 0);
 
     // Popping an empty stream returns the invalid sentinel
-    EXPECT_EQ(FdStream_Pop(&fdStream), -1);
+    EXPECT_EQ(FdStream_Pop(&fdStream).fd, FILE_DESCRIPTOR_INVALID);
 
     Arena_Free(&arena);
 }
@@ -37,14 +38,10 @@ TEST(FdStreamTest_PassFdsOverSocketpair_RequestDirection)
 {
     Arena arena = Arena_New();
 
-    int sockA = -1;
-    int sockB = -1;
-    {
-        int fds[2] = {0, 0};
-        ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
-        sockA = fds[0];
-        sockB = fds[1];
-    }
+    int fds[2] = {0, 0};
+    ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
+    int sockA = fds[0];
+    int sockB = fds[1];
 
     // Two tmp files with distinct contents to send over the wire
     int fileA = CREATE_TMP_FILE(O_RDWR | O_CREAT | O_TRUNC);
@@ -59,28 +56,26 @@ TEST(FdStreamTest_PassFdsOverSocketpair_RequestDirection)
     lseek(fileA, 0, SEEK_SET);
     lseek(fileB, 0, SEEK_SET);
 
-    // Send fds + a small byte body over sockA
-    FdStream sendFds = FdStream_New();
-    ASSERT_EQ(FdStream_Push(&sendFds, fileA, &arena), 0);
-    ASSERT_EQ(FdStream_Push(&sendFds, fileB, &arena), 0);
+    // Send fds + a small byte body over sockA (mimicking a client request)
+    Message sendMessage = Message_New();
+    DataStream_PushStr(&sendMessage.bodyStream, Str_FromCStr("hello"), &arena);
+    FdStream_Push(&sendMessage.fdStream, FileDescriptor_New(fileA), &arena);
+    FdStream_Push(&sendMessage.fdStream, FileDescriptor_New(fileB), &arena);
 
-    DataStream body = DataStream_New();
-    DataStream_PushStr(&body, Str_FromCStr("hello"), &arena);
-    DataStream_WriteMsg(&body, sockA, &sendFds);
-    EXPECT_EQ(body.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    Message_Write(&sendMessage, sockA);
+    EXPECT_EQ(sendMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
 
-    // Receive on sockB
-    FdStream recvFds = FdStream_New();
-    DataStream recvBody = DataStream_ReadMsg(sockB, &arena, body.__data.len, &recvFds);
-    EXPECT_EQ(recvBody.__data.len, body.__data.len);
-    EXPECT_EQ(FdStream_Count(&recvFds), 2);
+    // Receive on sockB (mimicking the server)
+    Message recvMessage = Message_Read(sockB, &arena, sendMessage.bodyStream.__data.len);
+    EXPECT_EQ(recvMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    EXPECT_EQ(FdStream_Count(&recvMessage.fdStream), 2);
 
     // Received fds must reference the same open file descriptions
-    Str receivedStr = DataStream_PopStr(&recvBody);
+    Str receivedStr = DataStream_PopStr(&recvMessage.bodyStream);
     EXPECT(Str_EqCStr(receivedStr, "hello"));
 
-    int fdA = FdStream_Pop(&recvFds);
-    int fdB = FdStream_Pop(&recvFds);
+    int fdA = FdStream_Pop(&recvMessage.fdStream).fd;
+    int fdB = FdStream_Pop(&recvMessage.fdStream).fd;
     ASSERT_NE(fdA, -1);
     ASSERT_NE(fdB, -1);
 
@@ -116,24 +111,22 @@ TEST(FdStreamTest_PassFdsOverSocketpair_ResponseDirection)
     lseek(fileA, 0, SEEK_SET);
 
     // Send fds + bytes from sockA (mimicking the server response direction)
-    FdStream sendFds = FdStream_New();
-    ASSERT_EQ(FdStream_Push(&sendFds, fileA, &arena), 0);
+    Message sendMessage = Message_New();
+    DataStream_PushStr(&sendMessage.bodyStream, Str_FromCStr("resp"), &arena);
+    FdStream_Push(&sendMessage.fdStream, FileDescriptor_New(fileA), &arena);
 
-    DataStream body = DataStream_New();
-    DataStream_PushStr(&body, Str_FromCStr("resp"), &arena);
-    DataStream_WriteMsg(&body, sockA, &sendFds);
-    EXPECT_EQ(body.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    Message_Write(&sendMessage, sockA);
+    EXPECT_EQ(sendMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
 
     // Receive on sockB (mimicking the client)
-    FdStream recvFds = FdStream_New();
-    DataStream recvBody = DataStream_ReadMsg(sockB, &arena, body.__data.len, &recvFds);
-    EXPECT_EQ(recvBody.__data.len, body.__data.len);
-    EXPECT_EQ(FdStream_Count(&recvFds), 1);
+    Message recvMessage = Message_Read(sockB, &arena, sendMessage.bodyStream.__data.len);
+    EXPECT_EQ(recvMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    EXPECT_EQ(FdStream_Count(&recvMessage.fdStream), 1);
 
-    Str receivedStr = DataStream_PopStr(&recvBody);
+    Str receivedStr = DataStream_PopStr(&recvMessage.bodyStream);
     EXPECT(Str_EqCStr(receivedStr, "resp"));
 
-    int fdA = FdStream_Pop(&recvFds);
+    int fdA = FdStream_Pop(&recvMessage.fdStream).fd;
     ASSERT_NE(fdA, -1);
 
     char readBuf[32] = {0};

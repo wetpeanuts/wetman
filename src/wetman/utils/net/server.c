@@ -116,7 +116,7 @@ void __Server_DisconnectConn(__ClientConn* conn)
     // Close any request fds that were not consumed by the endpoint handler.
     const usize unreadFdCount = FdStream_Count(&conn->requestFds);
     for (usize i = 0; i < unreadFdCount; i++) {
-        close(conn->requestFds.data[conn->requestFds.readPos + i]);
+        close(conn->requestFds.data[conn->requestFds.readPos + i].fd);
     }
     if (Arena_IsValid(&conn->arena)) {
         Arena_Free(&conn->arena);
@@ -214,7 +214,7 @@ isize __Server_ReadWithFds(int fd, void* buf, usize len, FdStream* fdStream, Are
 
     isize n = recvmsg(fd, &msg, 0);
     if (n > 0) {
-        DataStream_CollectFds(&msg, fdStream, arena);
+        FdStream_CollectFromMessageHeader(fdStream, &msg, arena);
     }
     return n;
 }
@@ -322,13 +322,13 @@ isize __Server_SendWithFds(int fd, const void* data, usize len, FdStream* fdStre
     const usize fdCount = FdStream_Count(fdStream);
     if (fdCount > 0) {
         msg.msg_control = controlBuf;
-        msg.msg_controllen = CMSG_SPACE(fdCount * sizeof(int));
+        msg.msg_controllen = CMSG_SPACE(fdCount * sizeof(FileDescriptor));
 
         struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_RIGHTS;
-        cmsg->cmsg_len = CMSG_LEN(fdCount * sizeof(int));
-        memcpy(CMSG_DATA(cmsg), FdStream_Data(fdStream), fdCount * sizeof(int));
+        cmsg->cmsg_len = CMSG_LEN(fdCount * sizeof(FileDescriptor));
+        memcpy(CMSG_DATA(cmsg), FdStream_Data(fdStream), fdCount * sizeof(FileDescriptor));
     }
 
     return sendmsg(fd, &msg, 0);
