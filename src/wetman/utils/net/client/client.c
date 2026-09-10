@@ -10,24 +10,20 @@ ReturnCode Client_CallEndpoint(
         Message* requestMessage,
         Message* responseMessage)
 {
-    Message requestData = Message_New();
     RequestHeader requestHeader = {
         .endpointId = endpointId,
-        .msgLen     = requestMessage->bodyStream.__data.len,
+        .msgLen     = requestMessage->body.__data.len,
     };
-    RequestHeader_Serialize(&requestHeader, &requestData.bodyStream, arena);
-    DataStream_Append(&requestData.bodyStream, &requestMessage->bodyStream, arena);
-    requestData.fdStream = requestMessage->fdStream;
+    RequestHeader_Serialize(&requestHeader, &requestMessage->header, arena);
 
-    *responseMessage = client->__requestHandler(client, &requestData, arena);
+    *responseMessage = client->__requestHandler(client, requestMessage, arena);
 
-    if (responseMessage->bodyStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    if (responseMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
-    DataStream responseHeaderData = responseMessage->bodyStream;
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseHeaderData);
-    if (responseHeaderData.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage->header);
+    if (responseMessage->header.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         return RETURN_CODE_FAILED_TO_PARSE_REQUEST;
     }
 

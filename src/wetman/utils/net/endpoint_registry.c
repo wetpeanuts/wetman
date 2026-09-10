@@ -62,14 +62,14 @@ Message EndpointRegistry_CallEndpoint(
         fprintf(stderr, "Attempt to call endpoint with invalid ID: %d. Available ID range: [0-%d]\n",
                 endpointId, ENDPOINT_REGISTRY_MAX_ENDPOINT_COUNT - 1);
         responseHeader.returnCode = RETURN_CODE_INVALID_ENDPOINT_ID;
-        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
         return responseMessage;
     }
 
     if (endpointRegistry->__endpoints[endpointId].id != endpointId) {
         fprintf(stderr, "Attempt to call non existent endpoint: ID = %d\n", endpointId);
         responseHeader.returnCode = RETURN_CODE_ENDPOINT_NOT_INITIALIZED;
-        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
         return responseMessage;
     }
 
@@ -78,23 +78,19 @@ Message EndpointRegistry_CallEndpoint(
     void* response = endpoint.responseFactory(arena);
     endpoint.requestDeserializer(request, requestMessage, arena);
 
-    if (requestMessage->bodyStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
-        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestMessage->bodyStream.lastResult);
+    if (requestMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestMessage->body.lastResult);
         responseHeader.returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST;
-        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
         return responseMessage;
     }
 
     ReturnCode returnCode = endpoint.handler(request, response);
 
-    Message responseBodyMessage = Message_New();
-    endpoint.responseSerializer(response, &responseBodyMessage, arena);
+    endpoint.responseSerializer(response, &responseMessage, arena);
     responseHeader.returnCode = returnCode;
-    responseHeader.msgLen = responseBodyMessage.bodyStream.__data.len;
-
-    responseMessage.fdStream = responseBodyMessage.fdStream;
-    ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
-    DataStream_Append(&responseMessage.bodyStream, &responseBodyMessage.bodyStream, arena);
+    responseHeader.msgLen = responseMessage.body.__data.len;
+    ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
 
     return responseMessage;
 }

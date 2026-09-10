@@ -23,24 +23,18 @@ Message __UnixClient_RequestHandler(
     __UnitClientContext* context = (__UnitClientContext*)client->__context;
 
     Message_Write(requestMessage, context->fdUnixSocket);
-    if (requestMessage->bodyStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    if (requestMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         // TODO: proper failure handling
         perror("Failed to write request");
         // close(context->fdUnixSocket);
-        responseMessage.bodyStream.lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
+        responseMessage.body.lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
         return responseMessage;
     }
 
-    // The fds arrive attached to the first segment (the header).
-    responseMessage = Message_Read(context->fdUnixSocket, arena, RESPONSE_HEADER_SERIALIZED_LEN);
-
-    // Since DataStream does not own the data and holds only a data slice
-    // no deep copy is performed here
-    DataStream headerData = responseMessage.bodyStream;
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&headerData);
-
-    Message responseBodyMessage = Message_Read(context->fdUnixSocket, arena, responseHeader.msgLen);
-    DataStream_Append(&responseMessage.bodyStream, &responseBodyMessage.bodyStream, arena);
+    // Reads header into header and body (length from the header's msgLen)
+    // into body; response fds arrive attached to the header segment and are
+    // collected into fileDescriptors.
+    responseMessage = Message_Read(context->fdUnixSocket, arena);
 
     return responseMessage;
 }

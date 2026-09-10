@@ -169,14 +169,14 @@ void __Server_ProcessRequest(__ClientConn* conn, EndpointRegistry* endpointRegis
     Message requestMessage = Message_New();
 
     if (conn->bodyBuf) {
-        requestMessage.bodyStream = DataStream_WithData((DataSlice){
+        requestMessage.body = DataStream_WithData((DataSlice){
             .data = conn->bodyBuf,
             .len  = conn->reqHeader.msgLen,
         });
     } else {
-        requestMessage.bodyStream = DataStream_WithData((DataSlice){ .data = "", .len = 0 });
+        requestMessage.body = DataStream_WithData((DataSlice){ .data = "", .len = 0 });
     }
-    requestMessage.fdStream = conn->requestFds;
+    requestMessage.fileDescriptors = conn->requestFds;
 
     printf("Calling endpoint %d\n", conn->reqHeader.endpointId);
 
@@ -188,10 +188,10 @@ void __Server_ProcessRequest(__ClientConn* conn, EndpointRegistry* endpointRegis
 
     // Sync back the fds consumed by the request deserializer so disconnect
     // cleanup only closes the ones the handler did not take ownership of.
-    conn->requestFds.readPos = requestMessage.fdStream.readPos;
+    conn->requestFds.readPos = requestMessage.fileDescriptors.readPos;
 
     conn->writeOffset = 0;
-    conn->responseFdsSent = (FdStream_Count(&conn->responseMessage.fdStream) == 0);
+    conn->responseFdsSent = (FdStream_Count(&conn->responseMessage.fileDescriptors) == 0);
     conn->state = CONN_STATE_WRITE;
 }
 
@@ -336,12 +336,22 @@ isize __Server_SendWithFds(int fd, const void* data, usize len, FdStream* fdStre
 
 void __Server_HandleWritable(__ClientConn* conn)
 {
-    const char* data    = conn->responseMessage.bodyStream.__data.data + conn->writeOffset;
-    usize       remaining = conn->responseMessage.bodyStream.__data.len - conn->writeOffset;
+    const usize headerLen = conn->responseMessage.header.__data.len;
+    const usize totalLen  = headerLen + conn->responseMessage.body.__data.len;
+
+    const char* data;
+    usize       remaining;
+    if (conn->writeOffset < headerLen) {
+        data      = conn->responseMessage.header.__data.data + conn->writeOffset;
+        remaining = headerLen - conn->writeOffset;
+    } else {
+        data      = conn->responseMessage.body.__data.data + (conn->writeOffset - headerLen);
+        remaining = totalLen - conn->writeOffset;
+    }
 
     isize n;
     if (!conn->responseFdsSent) {
-        n = __Server_SendWithFds(conn->fd, data, remaining, &conn->responseMessage.fdStream);
+        n = __Server_SendWithFds(conn->fd, data, remaining, &conn->responseMessage.fileDescriptors);
         // On any positive send the fds have been handed to the kernel; the
         // leftovers (if any) must be sent without a control message.
         if (n > 0) {
@@ -353,7 +363,7 @@ void __Server_HandleWritable(__ClientConn* conn)
 
     if (n > 0) {
         conn->writeOffset += (usize)n;
-        if (conn->writeOffset >= conn->responseMessage.bodyStream.__data.len) {
+        if (conn->writeOffset >= totalLen) {
             printf("Response fully sent\n");
             __Server_DisconnectConn(conn);
         }

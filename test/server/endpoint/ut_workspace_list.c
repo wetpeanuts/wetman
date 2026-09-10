@@ -27,7 +27,7 @@ static ReturnCode InitWorkspace(
             ENDPOINT_ID_WORKSPACE_INIT,
             arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     return (ReturnCode)responseHeader.returnCode;
 }
@@ -67,7 +67,7 @@ TEST(WorkspaceListTest_CallEndpoint_Success)
             ENDPOINT_ID_WORKSPACE_LIST,
             &arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     EXPECT(responseHeader.msgLen > 0);
@@ -114,7 +114,7 @@ TEST(WorkspaceListTest_CallEndpoint_Empty)
             ENDPOINT_ID_WORKSPACE_LIST,
             &arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
 

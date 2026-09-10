@@ -19,7 +19,7 @@ Message Endpoint_Call(
     if (endpoint->handler == NULL) {
         fprintf(stderr, "Attempt to call non initialized endpoint\n");
         responseHeader.returnCode = RETURN_CODE_ENDPOINT_NOT_INITIALIZED;
-        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
         return responseMessage;
     }
 
@@ -27,23 +27,19 @@ Message Endpoint_Call(
     void* response = endpoint->responseFactory(arena);
     endpoint->requestDeserializer(request, requestMessage, arena);
 
-    if (requestMessage->bodyStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
-        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestMessage->bodyStream.lastResult);
+    if (requestMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestMessage->body.lastResult);
         responseHeader.returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST;
-        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
         return responseMessage;
     }
 
     ReturnCode returnCode = endpoint->handler(request, response);
 
-    Message responseBodyMessage = Message_New();
-    endpoint->responseSerializer(response, &responseBodyMessage, arena);
+    endpoint->responseSerializer(response, &responseMessage, arena);
     responseHeader.returnCode = returnCode;
-    responseHeader.msgLen = responseBodyMessage.bodyStream.__data.len;
-
-    responseMessage.fdStream = responseBodyMessage.fdStream;
-    ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
-    DataStream_Append(&responseMessage.bodyStream, &responseBodyMessage.bodyStream, arena);
+    responseHeader.msgLen = responseMessage.body.__data.len;
+    ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
 
     return responseMessage;
 }

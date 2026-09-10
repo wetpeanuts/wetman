@@ -35,7 +35,7 @@ static ReturnCode InitTestWorkspace(
             ENDPOINT_ID_WORKSPACE_INIT,
             arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     return (ReturnCode)responseHeader.returnCode;
 }
@@ -60,7 +60,7 @@ static ReturnCode CreateTask(
             ENDPOINT_ID_TASK_NEW,
             arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     if (responseHeader.returnCode == RETURN_CODE_OK) {
         Endpoint_TaskNew_ResponseDeserializer(response, &responseMessage, arena);

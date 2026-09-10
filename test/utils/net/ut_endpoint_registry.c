@@ -69,7 +69,7 @@ TEST(EndpointRegistryTest_CallEndpoint_Success)
 
     Message responseMessage = EndpointRegistry_CallEndpoint(
             &node, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     ASSERT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     ASSERT_EQ(responseHeader.msgLen, TEST_ENDPOINT_RESPONSE_SERIALIZED_LEN);
@@ -95,13 +95,13 @@ TEST(EndpointRegistryTest_CallEndpoint_InvalidEndpoint)
 
     Message responseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     ASSERT_EQ(responseHeader.returnCode, RETURN_CODE_ENDPOINT_NOT_INITIALIZED);
     ASSERT_EQ(responseHeader.msgLen, 0);
 
     responseMessage = EndpointRegistry_CallEndpoint(&endpointRegistry, ENDPOINT_REGISTRY_MAX_ENDPOINT_COUNT, &arena, &requestMessage);
-    responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     ASSERT_EQ(responseHeader.returnCode, RETURN_CODE_INVALID_ENDPOINT_ID);
     ASSERT_EQ(responseHeader.msgLen, 0);
@@ -128,11 +128,11 @@ TEST(EndpointRegistryTest_CallEndpoint_ValidEndpoint_InvalidRequest)
 
     Arena arena = Arena_New();
     Message requestMessage = Message_New();
-    DataStream_PushU32(&requestMessage.bodyStream, 42, &arena);
+    DataStream_PushU32(&requestMessage.header, 42, &arena);
 
     Message responseMessage = EndpointRegistry_CallEndpoint(
             &node, TEST_ENDPOINT_ID_ECHO_I32, &arena, &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_FAILED_TO_PARSE_REQUEST);
     EXPECT_EQ(responseHeader.msgLen, 0);

@@ -20,7 +20,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_RequestSerializer(
         Message*                    message,
         Arena*                      arena)
 {
-    FdStream_Push(&message->fdStream, req->fd, arena);
+    FdStream_Push(&message->fileDescriptors, req->fd, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoFd_RequestDeserializer(
@@ -28,7 +28,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_RequestDeserializer(
         Message*                    message,
         Arena*                      arena)
 {
-    req->fd = FdStream_Pop(&message->fdStream);
+    req->fd = FdStream_Pop(&message->fileDescriptors);
     (void)arena;
 }
 
@@ -37,7 +37,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_ResponseSerializer(
         Message*                     message,
         Arena*                       arena)
 {
-    FdStream_Push(&message->fdStream, resp->fd, arena);
+    FdStream_Push(&message->fileDescriptors, resp->fd, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoFd_ResponseDeserializer(
@@ -45,7 +45,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoFd_ResponseDeserializer(
         Message*                     message,
         Arena*                       arena)
 {
-    resp->fd = FdStream_Pop(&message->fdStream);
+    resp->fd = FdStream_Pop(&message->fileDescriptors);
     (void)arena;
 }
 

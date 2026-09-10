@@ -16,14 +16,14 @@ Message __EndpointClient_RequestHandler(
 {
     __EndpointClientContext* context = (__EndpointClientContext*)client->__context;
 
-    RequestHeader requestHeader = RequestHeader_Deserialize(&requestMessage->bodyStream);
-    if (requestMessage->bodyStream.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    RequestHeader requestHeader = RequestHeader_Deserialize(&requestMessage->header);
+    if (requestMessage->header.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         Message responseMessage = Message_New();
         ResponseHeader responseHeader = {
             .returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST,
             .msgLen     = 0,
         };
-        ResponseHeader_Serialize(&responseHeader, &responseMessage.bodyStream, arena);
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
         return responseMessage;
     }
 

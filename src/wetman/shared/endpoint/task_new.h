@@ -22,8 +22,8 @@ static inline MAYBE_UNUSED void Endpoint_TaskNew_RequestSerializer(
         Message*                  message,
         Arena*                    arena)
 {
-    DataStream_PushU64(&message->bodyStream, (u64)req->workspaceId, arena);
-    DataStream_PushStr(&message->bodyStream, req->taskName, arena);
+    DataStream_PushU64(&message->body, (u64)req->workspaceId, arena);
+    DataStream_PushStr(&message->body, req->taskName, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_TaskNew_RequestDeserializer(
@@ -31,8 +31,8 @@ static inline MAYBE_UNUSED void Endpoint_TaskNew_RequestDeserializer(
         Message*                  message,
         Arena*                    arena)
 {
-    req->workspaceId = (usize)DataStream_PopU64(&message->bodyStream);
-    req->taskName    = DataStream_PopStr(&message->bodyStream);
+    req->workspaceId = (usize)DataStream_PopU64(&message->body);
+    req->taskName    = DataStream_PopStr(&message->body);
     (void)arena;
 }
 
@@ -41,7 +41,7 @@ static inline MAYBE_UNUSED void Endpoint_TaskNew_ResponseSerializer(
         Message*                   message,
         Arena*                     arena)
 {
-    DataStream_PushU64(&message->bodyStream, (u64)resp->taskId, arena);
+    DataStream_PushU64(&message->body, (u64)resp->taskId, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_TaskNew_ResponseDeserializer(
@@ -49,7 +49,7 @@ static inline MAYBE_UNUSED void Endpoint_TaskNew_ResponseDeserializer(
         Message*                   message,
         Arena*                     arena)
 {
-    resp->taskId = (usize)DataStream_PopU64(&message->bodyStream);
+    resp->taskId = (usize)DataStream_PopU64(&message->body);
     (void)arena;
 }
 

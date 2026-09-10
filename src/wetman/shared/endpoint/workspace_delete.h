@@ -21,7 +21,7 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_RequestSerializer(
         Message*                          message,
         Arena*                            arena)
 {
-    DataStream_PushU64(&message->bodyStream, (u64)req->workspaceId, arena);
+    DataStream_PushU64(&message->body, (u64)req->workspaceId, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_RequestDeserializer(
@@ -29,7 +29,7 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_RequestDeserializer(
         Message*                          message,
         Arena*                            arena)
 {
-    req->workspaceId = (usize)DataStream_PopU64(&message->bodyStream);
+    req->workspaceId = (usize)DataStream_PopU64(&message->body);
     (void)arena;
 }
 
@@ -38,7 +38,7 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_ResponseSerializer(
         Message*                           message,
         Arena*                             arena)
 {
-    DataStream_PushU64(&message->bodyStream, (u64)resp->workspaceId, arena);
+    DataStream_PushU64(&message->body, (u64)resp->workspaceId, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_ResponseDeserializer(
@@ -46,7 +46,7 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceDelete_ResponseDeserializer(
         Message*                           message,
         Arena*                             arena)
 {
-    resp->workspaceId = (usize)DataStream_PopU64(&message->bodyStream);
+    resp->workspaceId = (usize)DataStream_PopU64(&message->body);
     (void)arena;
 }
 

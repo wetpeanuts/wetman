@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "../../shared/endpoint/id.h"
+
 
 TEST(FdStreamTest_PushPopCount)
 {
@@ -56,26 +58,31 @@ TEST(FdStreamTest_PassFdsOverSocketpair_RequestDirection)
     lseek(fileA, 0, SEEK_SET);
     lseek(fileB, 0, SEEK_SET);
 
-    // Send fds + a small byte body over sockA (mimicking a client request)
+    // Send fds + a header + a small byte body over sockA (mimicking a client request)
     Message sendMessage = Message_New();
-    DataStream_PushStr(&sendMessage.bodyStream, Str_FromCStr("hello"), &arena);
-    FdStream_Push(&sendMessage.fdStream, FileDescriptor_New(fileA), &arena);
-    FdStream_Push(&sendMessage.fdStream, FileDescriptor_New(fileB), &arena);
+    DataStream_PushStr(&sendMessage.body, Str_FromCStr("hello"), &arena);
+    RequestHeader sendRequestHeader = {
+        .endpointId = TEST_ENDPOINT_ID_ECHO_STR,
+        .msgLen     = (u32)sendMessage.body.__data.len,
+    };
+    RequestHeader_Serialize(&sendRequestHeader, &sendMessage.header, &arena);
+    FdStream_Push(&sendMessage.fileDescriptors, FileDescriptor_New(fileA), &arena);
+    FdStream_Push(&sendMessage.fileDescriptors, FileDescriptor_New(fileB), &arena);
 
     Message_Write(&sendMessage, sockA);
-    EXPECT_EQ(sendMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    EXPECT_EQ(sendMessage.body.lastResult, DATA_STREAM_RESULT_SUCCESS);
 
     // Receive on sockB (mimicking the server)
-    Message recvMessage = Message_Read(sockB, &arena, sendMessage.bodyStream.__data.len);
-    EXPECT_EQ(recvMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
-    EXPECT_EQ(FdStream_Count(&recvMessage.fdStream), 2);
+    Message recvMessage = Message_Read(sockB, &arena);
+    EXPECT_EQ(recvMessage.body.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    EXPECT_EQ(FdStream_Count(&recvMessage.fileDescriptors), 2);
 
     // Received fds must reference the same open file descriptions
-    Str receivedStr = DataStream_PopStr(&recvMessage.bodyStream);
+    Str receivedStr = DataStream_PopStr(&recvMessage.body);
     EXPECT(Str_EqCStr(receivedStr, "hello"));
 
-    int fdA = FdStream_Pop(&recvMessage.fdStream).fd;
-    int fdB = FdStream_Pop(&recvMessage.fdStream).fd;
+    int fdA = FdStream_Pop(&recvMessage.fileDescriptors).fd;
+    int fdB = FdStream_Pop(&recvMessage.fileDescriptors).fd;
     ASSERT_NE(fdA, -1);
     ASSERT_NE(fdB, -1);
 
@@ -110,23 +117,28 @@ TEST(FdStreamTest_PassFdsOverSocketpair_ResponseDirection)
     ASSERT_EQ((i32)write(fileA, payload, strlen(payload)), (i32)strlen(payload));
     lseek(fileA, 0, SEEK_SET);
 
-    // Send fds + bytes from sockA (mimicking the server response direction)
+    // Send fds + a header + bytes from sockA (mimicking the server response direction)
     Message sendMessage = Message_New();
-    DataStream_PushStr(&sendMessage.bodyStream, Str_FromCStr("resp"), &arena);
-    FdStream_Push(&sendMessage.fdStream, FileDescriptor_New(fileA), &arena);
+    DataStream_PushStr(&sendMessage.body, Str_FromCStr("resp"), &arena);
+    ResponseHeader sendResponseHeader = {
+        .returnCode = RETURN_CODE_OK,
+        .msgLen     = (u32)sendMessage.body.__data.len,
+    };
+    ResponseHeader_Serialize(&sendResponseHeader, &sendMessage.header, &arena);
+    FdStream_Push(&sendMessage.fileDescriptors, FileDescriptor_New(fileA), &arena);
 
     Message_Write(&sendMessage, sockA);
-    EXPECT_EQ(sendMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    EXPECT_EQ(sendMessage.body.lastResult, DATA_STREAM_RESULT_SUCCESS);
 
     // Receive on sockB (mimicking the client)
-    Message recvMessage = Message_Read(sockB, &arena, sendMessage.bodyStream.__data.len);
-    EXPECT_EQ(recvMessage.bodyStream.lastResult, DATA_STREAM_RESULT_SUCCESS);
-    EXPECT_EQ(FdStream_Count(&recvMessage.fdStream), 1);
+    Message recvMessage = Message_Read(sockB, &arena);
+    EXPECT_EQ(recvMessage.body.lastResult, DATA_STREAM_RESULT_SUCCESS);
+    EXPECT_EQ(FdStream_Count(&recvMessage.fileDescriptors), 1);
 
-    Str receivedStr = DataStream_PopStr(&recvMessage.bodyStream);
+    Str receivedStr = DataStream_PopStr(&recvMessage.body);
     EXPECT(Str_EqCStr(receivedStr, "resp"));
 
-    int fdA = FdStream_Pop(&recvMessage.fdStream).fd;
+    int fdA = FdStream_Pop(&recvMessage.fileDescriptors).fd;
     ASSERT_NE(fdA, -1);
 
     char readBuf[32] = {0};

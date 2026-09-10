@@ -45,9 +45,9 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceList_ResponseSerializer(
         Message*                         message,
         Arena*                           arena)
 {
-    DataStream_PushSliceU64(&message->bodyStream, resp->workspaceIds, arena);
-    DataStream_PushSliceStr(&message->bodyStream, resp->workspaceNames, arena);
-    DataStream_PushSliceStr(&message->bodyStream, resp->workspacePaths, arena);
+    DataStream_PushSliceU64(&message->body, resp->workspaceIds, arena);
+    DataStream_PushSliceStr(&message->body, resp->workspaceNames, arena);
+    DataStream_PushSliceStr(&message->body, resp->workspacePaths, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceList_ResponseDeserializer(
@@ -55,9 +55,9 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceList_ResponseDeserializer(
         Message*                         message,
         Arena*                           arena)
 {
-    resp->workspaceIds   = DataStream_PopSliceU64(&message->bodyStream);
-    resp->workspaceNames = DataStream_PopSliceStr(&message->bodyStream, arena);
-    resp->workspacePaths = DataStream_PopSliceStr(&message->bodyStream, arena);
+    resp->workspaceIds   = DataStream_PopSliceU64(&message->body);
+    resp->workspaceNames = DataStream_PopSliceStr(&message->body, arena);
+    resp->workspacePaths = DataStream_PopSliceStr(&message->body, arena);
 }
 
 #endif // WETMAN_SHARED_ENDPOINT_WORKSPACE_LIST_H

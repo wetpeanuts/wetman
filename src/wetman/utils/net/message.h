@@ -11,21 +11,27 @@
 
 #define REQUEST_HEADER_SERIALIZED_LEN (2 * sizeof(i32) + sizeof(RequestHeader))
 #define RESPONSE_HEADER_SERIALIZED_LEN (2 * sizeof(i32) + sizeof(ResponseHeader))
+#define MESSAGE_HEADER_SERIALIZED_LEN RESPONSE_HEADER_SERIALIZED_LEN
 
-// Message carries both the byte payload (bodyStream) and any file descriptors
-// (fdStream) for a single request or response. Endpoint serializers and
-// deserializers operate on this combined structure.
+// Message couples the payload streams for a single request or response:
+// header (RequestHeader or ResponseHeader), body (endpoint payload) and any
+// file descriptors (fileDescriptors). Endpoint serializers and deserializers
+// only ever touch the body and fileDescriptors members; the transports own
+// the header stream.
 typedef struct Message {
-    DataStream bodyStream;
-    FdStream   fdStream;
+    DataStream header;
+    DataStream body;
+    FdStream   fileDescriptors;
 } Message;
 
 Message Message_New(void);
 
-// Read one message segment (bytes into bodyStream, attached fds into fdStream)
-// from the given socket. Mirrors DataStream_Read.
-Message Message_Read(int fd, Arena* arena, isize maxLen);
-// Write the message body + fds over the given socket. Mirrors DataStream_Write.
+// Read one full message segment from the given socket: a fixed-size header
+// into header, then the body (length taken from the header's msgLen field)
+// into body; attached fds land in fileDescriptors.
+Message Message_Read(int fd, Arena* arena);
+// Write the message header + body + fds over the given socket via a single
+// sendmsg (scatter/gather, no intermediate copy).
 void Message_Write(Message* message, int fd);
 
 typedef struct {

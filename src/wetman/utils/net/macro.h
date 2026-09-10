@@ -84,7 +84,7 @@
                 &requestMessage, \
                 &responseMessage); \
         if (returnCode == RETURN_CODE_OK) { \
-            ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream); \
+            ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header); \
             returnCode = (ReturnCode)responseHeader.returnCode; \
             if (returnCode == RETURN_CODE_OK) { \
                 endpointName##_ResponseDeserializer(response, &responseMessage, arena); \

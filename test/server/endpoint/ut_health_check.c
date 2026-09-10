@@ -23,7 +23,7 @@ TEST(HealthCheckTest_CallEndpoint_Success)
             ENDPOINT_ID_HEALTH_CHECK,
             &arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     EXPECT_EQ(responseHeader.msgLen, 0);

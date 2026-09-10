@@ -41,7 +41,7 @@ TEST(WorkspaceDeleteTest_CallEndpoint_Success)
             ENDPOINT_ID_WORKSPACE_INIT,
             &arena,
             &initRequestMessage);
-    ResponseHeader initResponseHeader = ResponseHeader_Deserialize(&initResponseMessage.bodyStream);
+    ResponseHeader initResponseHeader = ResponseHeader_Deserialize(&initResponseMessage.header);
 
     EXPECT_EQ(initResponseHeader.returnCode, RETURN_CODE_OK);
 
@@ -81,7 +81,7 @@ TEST(WorkspaceDeleteTest_CallEndpoint_Success)
             ENDPOINT_ID_WORKSPACE_DELETE,
             &arena,
             &deleteRequestMessage);
-    ResponseHeader deleteResponseHeader = ResponseHeader_Deserialize(&deleteResponseMessage.bodyStream);
+    ResponseHeader deleteResponseHeader = ResponseHeader_Deserialize(&deleteResponseMessage.header);
 
     EXPECT_EQ(deleteResponseHeader.returnCode, RETURN_CODE_OK);
 
@@ -120,7 +120,7 @@ TEST(WorkspaceDeleteTest_CallEndpoint_WorkspaceNotFound)
             ENDPOINT_ID_WORKSPACE_DELETE,
             &arena,
             &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.bodyStream);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_INTERNAL_ENDPOINT_ERROR);
 

@@ -22,8 +22,8 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestSerializer(
         Message*                        message,
         Arena*                          arena)
 {
-    DataStream_PushStr(&message->bodyStream, req->workspacePath, arena);
-    DataStream_PushStr(&message->bodyStream, req->workspaceName, arena);
+    DataStream_PushStr(&message->body, req->workspacePath, arena);
+    DataStream_PushStr(&message->body, req->workspaceName, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestDeserializer(
@@ -31,8 +31,8 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_RequestDeserializer(
         Message*                        message,
         Arena*                          arena)
 {
-    req->workspacePath = DataStream_PopStr(&message->bodyStream);
-    req->workspaceName = DataStream_PopStr(&message->bodyStream);
+    req->workspacePath = DataStream_PopStr(&message->body);
+    req->workspaceName = DataStream_PopStr(&message->body);
     (void)arena;
 }
 
@@ -41,7 +41,7 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseSerializer(
         Message*                         message,
         Arena*                           arena)
 {
-    DataStream_PushU64(&message->bodyStream, (u64)resp->workspaceId, arena);
+    DataStream_PushU64(&message->body, (u64)resp->workspaceId, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseDeserializer(
@@ -49,7 +49,7 @@ static inline MAYBE_UNUSED void Endpoint_WorkspaceInit_ResponseDeserializer(
         Message*                         message,
         Arena*                           arena)
 {
-    resp->workspaceId = (usize)DataStream_PopU64(&message->bodyStream);
+    resp->workspaceId = (usize)DataStream_PopU64(&message->body);
     (void)arena;
 }
 

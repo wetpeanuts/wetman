@@ -22,7 +22,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestSerializer(
         Message*                     message,
         Arena*                       arena)
 {
-    DataStream_PushI32(&message->bodyStream, req->value, arena);
+    DataStream_PushI32(&message->body, req->value, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestDeserializer(
@@ -30,7 +30,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestDeserializer(
         Message*                     message,
         Arena*                       arena)
 {
-    req->value = DataStream_PopI32(&message->bodyStream);
+    req->value = DataStream_PopI32(&message->body);
     (void)arena;
 }
 
@@ -39,7 +39,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseSerializer(
         Message*                      message,
         Arena*                        arena)
 {
-    DataStream_PushI32(&message->bodyStream, resp->value, arena);
+    DataStream_PushI32(&message->body, resp->value, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseDeserializer(
@@ -47,7 +47,7 @@ static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseDeserializer(
         Message*                      message,
         Arena*                        arena)
 {
-    resp->value = DataStream_PopI32(&message->bodyStream);
+    resp->value = DataStream_PopI32(&message->body);
     (void)arena;
 }
 
