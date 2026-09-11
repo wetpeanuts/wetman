@@ -85,6 +85,18 @@ static int ParseInitId(
     return 0;
 }
 
+static int ParseTaskId(
+        const char* buf,
+        usize*      id)
+{
+    unsigned long long parsed = 0;
+    if (sscanf(buf, "Task created with id: %llu", &parsed) != 1) {
+        return -1;
+    }
+    *id = (usize)parsed;
+    return 0;
+}
+
 static int CreateProjectDir(
         const char* parent,
         const char* name,
