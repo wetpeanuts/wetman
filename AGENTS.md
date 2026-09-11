@@ -5,7 +5,7 @@ builds are plain `clang` invocations in `scripts/`.
 
 ## Commands
 - `./.utils/build.sh` — build all 3 binaries into `build/`
-- `./.utils/test.sh`   — run `build/wetman_test` (all unit tests)
+- `./.utils/test.sh`   — run `build/wetman_test` (all unit + integration tests)
 - `./.utils/run.sh`    — run `build/wetman_server`
 - All builds use `clang -std=c11 -pedantic -Wall -Wextra -I ./src`
 
@@ -37,18 +37,19 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   in `client/main.c` via `CommandParser_RegisterCommand(&parser,
   Command_<Name>_Create(&arena))`. Available commands: `healthcheck`,
   `workspace init [-n|--name <name>]`, `workspace delete [-w|--workspace <id>]`,
-  `workspace list`, `-h/--help`. Adding a command = create
-  `commands/<name>.c` + `.h`, add `#include` to `commands/mod.c`, and register
-  in `main.c`.
-- Request deserialization: `RequestDeserializer_Deserialize(req, arena)` and
-  response deserialization: `ResponseDeserializer_Deserialize(resp, arena)`
-  both accept an `Arena*` to allocate any resources owned by the
-  request/response (e.g. slices, strings).
+  `workspace list`, `task new <name>`,
+  `task get [-w|--workspace <id>] <taskId>`, `-h/--help`. Adding a command =
+  create `commands/<name>.c` + `.h`, add `#include` to `commands/mod.c`, and
+  register in `main.c`.
+- Request/response structs (except stateless ones) allocate any resources they
+  own (slices, strings) into the `Arena*` passed to the shared inline
+  deserializers `Endpoint_<Name>_RequestDeserializer(req, Message*, Arena*)` /
+  `Endpoint_<Name>_ResponseDeserializer(resp, Message*, Arena*)`.
 - Endpoint (de)serializers take a single `Message*` (see "Data structures &
   serialization") instead of a `DataStream*`: `(req, Message*, Arena*)`.
-  Inline serializers write to `&message->bodyStream`; FDs go through
-  `FdStream_Push(&message->fdStream, ..., arena)` /
-  `FdStream_Pop(&message->fdStream)` just like body fields.
+  Inline serializers write to `&message->body`; FDs go through
+  `FdStream_Push(&message->fileDescriptors, ..., arena)` /
+  `FdStream_Pop(&message->fileDescriptors)` just like body fields.
 - Global server state lives in `ServerContext` (`server/context.[ch]`), set up
   via `ServerContext_Init(arena, wdir)` from `server/main.c`; workspaces are
   stored under `<wdir>/workspaces/<id>` and the id counter persists in
@@ -72,7 +73,7 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
 - Harness in `src/wetman/utils/test/`. Define tests with `TEST(Name)`; register
   via `REGISTER_TEST(Name)` in the matching `register*Tests()` in
   `test/.../mod.c`, chained up to `test/main.c`'s `registerUtilTests()` /
-  `registerServerTests()`.
+  `registerServerTests()` / `registerSharedTests()`.
 - New test file: add `#include "ut_x.c"` to the matching `test/.../mod.c`.
 - Shared test endpoints (e.g. `echo_i32`, `echo_str`, `echo_fd`) live in
   `test/shared/endpoint/`: structs + inline serializers in `echo_x.h`, server
@@ -91,6 +92,12 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
 - Data structure tests live in `test/utils/data_struct/` (e.g. `ut_slice_i32.c`,
   `ut_slice_str.c`, `ut_slice_i64.c`, `ut_slice_u32.c`, `ut_slice_u64.c`).
 - Serialization tests live in `test/utils/ut_data_stream.c`.
+- Integration tests live in `test/integration/` (`it_*.c`) and run the real
+  `build/wetman` binary against a spawned `wetman_server` (`RUN_TESTS_IN_WDIR`)
+  via `Subprocess_RunCommand`; shared helpers (`RunWetman`, `ReadFile`,
+  `ParseInitId`, `ParseTaskId`) are in `test/integration/utils.h`. Register them
+  in `test/integration/mod.c` in order — server-dependent tests must be
+  registered between `IntegrationTest_RunServer` and `IntegrationTest_ShutDownServer`.
 
 ## Conventions
 - Functions are `Module_Action` (e.g. `Arena_New`, `EndpointRegistry_CallEndpoint`);
@@ -108,9 +115,9 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   concrete types: `SliceI32`, `SliceStr`, `SliceI64`, `SliceU32`, `SliceU64`.
   Each lives in its own `slice_x.c`/`.h` file under `utils/data_struct/`.
   Slice allocation always goes through `Arena` (no manual free).
-- `DataStream` (`utils/data_stream.h`) provides `Serialize`/`Deserialize`
-  helpers for every `Slice` variant (e.g. `DataStream_SerializeSliceStr`,
-  `DataStream_DeserializeSliceU64`). Binary wire format: element count (u64)
+- `DataStream` (`utils/data_stream.h`) provides `Push`/`Pop`
+  helpers for every `Slice` variant (e.g. `DataStream_PushSliceStr`,
+  `DataStream_PopSliceU64`). Binary wire format: element count (u64)
   followed by raw elements (i32/u32/u64) or length-prefixed bytes (Str).
 - `FdStream` (`utils/net/fd_stream.h`) is the parallel file-descriptor array:
   `FdStream_New/Push/Pop/Count/Data`, arena-backed with a pop cursor. It is
@@ -118,18 +125,20 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   data attached to the `recvmsg`/`sendmsg` call (max 64 fds per message,
   `__MESSAGE_MAX_FDS_PER_MESSAGE`). `FileDescriptor` (`utils/net/fd.h`)
   wraps a raw `int fd` with `FILE_DESCRIPTOR_INVALID (-1)`.
-- `Message` (`utils/net/message.h`) bundles `DataStream bodyStream` +
-  `FdStream fdStream`; every endpoint (de)serializer takes a single
-  `Message*`. `Message_Write(message, fd)` writes body+fds over a socket;
-  `Message_Read(fd, arena, maxLen)` reads one message segment, collecting any
-  attached fds into `fdStream`. Serializers attach FDs with
-  `FdStream_Push(&message->fdStream, ..., arena)`, deserializers fetch them
-  with `FdStream_Pop(&message->fdStream)`.
-- The server transport (`utils/net/server.c`) keeps a `Message responseMessage`
-  + `FdStream requestFds` per connection; response fds are sent on the first
+- `Message` (`utils/net/message.h`) bundles `DataStream header` +
+  `DataStream body` + `FdStream fileDescriptors`; every endpoint
+  (de)serializer takes a single `Message*` and touches only `body` +
+  `fileDescriptors`. `Message_Write(message, fd)` writes header+body+fds over
+  a socket via a single `sendmsg`; `Message_Read(fd, arena)` reads one message
+  segment, collecting any attached fds into `fileDescriptors`. Serializers
+  attach FDs with `FdStream_Push(&message->fileDescriptors, ..., arena)`,
+  deserializers fetch them with `FdStream_Pop(&message->fileDescriptors)`. The
+  server transport (`utils/net/server.c`) keeps a `Message responseMessage` +
+  `FdStream requestFds` per connection; response fds are sent on the first
   segment (`responseFdsSent` flag), unconsumed request fds are closed on
   disconnect.
-- Shared endpoint headers (`shared/endpoint/*.h`) use `DataStream` inline
-  `Serialize`/`Deserialize` functions in request/response structs. The
-  serialized payload is a contiguous byte buffer; endpoints never use
-  separate fields for wire data — they embed `DataStream` members directly.
+- Shared endpoint headers (`shared/endpoint/*.h`) define `DataStream` inline
+  `Endpoint_<Name>_RequestSerializer`/`_ResponseSerializer` and
+  `_RequestDeserializer`/`_ResponseDeserializer` functions in request/response
+  structs. The serialized payload is a contiguous byte buffer; endpoints never
+  use separate fields for wire data — they embed `DataStream` members directly.
