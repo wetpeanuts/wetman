@@ -32,21 +32,21 @@ TEST(WorkspaceInitTest_CallEndpoint_Success)
         .workspaceName = Str_FromCStr("test_project"),
     };
 
-    DataStream requestData = DataStream_New();
-    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestData, &arena);
+    Message requestMessage = Message_New();
+    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestMessage, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_WORKSPACE_INIT,
             &arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     EXPECT_EQ(responseHeader.msgLen, sizeof(i32) + sizeof(u64));
 
     Endpoint_WorkspaceInit_Response response;
-    Endpoint_WorkspaceInit_ResponseDeserializer(&response, &responseData, &arena);
+    Endpoint_WorkspaceInit_ResponseDeserializer(&response, &responseMessage, &arena);
     EXPECT_EQ(response.workspaceId, 0);
 
     Str wetmanDir = FS_PathJoin(

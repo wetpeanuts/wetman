@@ -9,29 +9,29 @@ typedef struct {
     EndpointRegistry* endpointRegistry;
 } __EndpointClientContext;
 
-DataStream __EndpointClient_RequestHandler(
-        Client*     client,
-        DataStream* requestData,
-        Arena*      arena)
+Message __EndpointClient_RequestHandler(
+        Client*  client,
+        Message* requestMessage,
+        Arena*   arena)
 {
     __EndpointClientContext* context = (__EndpointClientContext*)client->__context;
 
-    RequestHeader requestHeader = RequestHeader_Deserialize(requestData);
-    if (requestData->lastResult != DATA_STREAM_RESULT_SUCCESS) {
-        DataStream responseData = DataStream_New();
+    RequestHeader requestHeader = RequestHeader_Deserialize(&requestMessage->header);
+    if (requestMessage->header.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+        Message responseMessage = Message_New();
         ResponseHeader responseHeader = {
             .returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST,
             .msgLen     = 0,
         };
-        ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-        return responseData;
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
+        return responseMessage;
     }
 
     return EndpointRegistry_CallEndpoint(
             context->endpointRegistry,
             requestHeader.endpointId,
             arena,
-            requestData);
+            requestMessage);
 }
 
 void __EndpointClient_DisconnectHandler(Client* client)

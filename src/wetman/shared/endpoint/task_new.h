@@ -5,6 +5,7 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/endpoint.h>
+#include <wetman/utils/net/message.h>
 
 
 typedef struct {
@@ -18,37 +19,37 @@ typedef struct {
 
 static inline MAYBE_UNUSED void Endpoint_TaskNew_RequestSerializer(
         Endpoint_TaskNew_Request* req,
-        DataStream*               ds,
+        Message*                  message,
         Arena*                    arena)
 {
-    DataStream_PushU64(ds, (u64)req->workspaceId, arena);
-    DataStream_PushStr(ds, req->taskName, arena);
+    DataStream_PushU64(&message->body, (u64)req->workspaceId, arena);
+    DataStream_PushStr(&message->body, req->taskName, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_TaskNew_RequestDeserializer(
         Endpoint_TaskNew_Request* req,
-        DataStream*               ds,
+        Message*                  message,
         Arena*                    arena)
 {
-    req->workspaceId = (usize)DataStream_PopU64(ds);
-    req->taskName    = DataStream_PopStr(ds);
+    req->workspaceId = (usize)DataStream_PopU64(&message->body);
+    req->taskName    = DataStream_PopStr(&message->body);
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_TaskNew_ResponseSerializer(
         Endpoint_TaskNew_Response* resp,
-        DataStream*                ds,
+        Message*                   message,
         Arena*                     arena)
 {
-    DataStream_PushU64(ds, (u64)resp->taskId, arena);
+    DataStream_PushU64(&message->body, (u64)resp->taskId, arena);
 }
 
 static inline MAYBE_UNUSED void Endpoint_TaskNew_ResponseDeserializer(
         Endpoint_TaskNew_Response* resp,
-        DataStream*                ds,
+        Message*                   message,
         Arena*                     arena)
 {
-    resp->taskId = (usize)DataStream_PopU64(ds);
+    resp->taskId = (usize)DataStream_PopU64(&message->body);
     (void)arena;
 }
 

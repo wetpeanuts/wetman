@@ -14,38 +14,29 @@ typedef struct {
     i32 fdUnixSocket;
 } __UnitClientContext;
 
-DataStream __UnixClient_RequestHandler(
-        Client*     client,
-        DataStream* requestData,
-        Arena*      arena)
+Message __UnixClient_RequestHandler(
+        Client*  client,
+        Message* requestMessage,
+        Arena*   arena)
 {
-    DataStream responseData = DataStream_New();
+    Message responseMessage = Message_New();
     __UnitClientContext* context = (__UnitClientContext*)client->__context;
 
-    DataStream_Write(requestData, context->fdUnixSocket);
-    if (requestData->lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    Message_Write(requestMessage, context->fdUnixSocket);
+    if (requestMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         // TODO: proper failure handling
         perror("Failed to write request");
         // close(context->fdUnixSocket);
-        responseData.lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
-        return responseData;
+        responseMessage.body.lastResult = DATA_STREAM_RESULT_FAILED_WRITE;
+        return responseMessage;
     }
 
-    DataStream responseHeaderData = DataStream_Read(
-            context->fdUnixSocket, arena, RESPONSE_HEADER_SERIALIZED_LEN);
+    // Reads header into header and body (length from the header's msgLen)
+    // into body; response fds arrive attached to the header segment and are
+    // collected into fileDescriptors.
+    responseMessage = Message_Read(context->fdUnixSocket, arena);
 
-    // Since DataStream does not own the data and holds only a data slice
-    // no deep copy is performed here
-    DataStream responseHeaderDataCopy = responseHeaderData;
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseHeaderDataCopy);
-
-    DataStream responseBodyData = DataStream_Read(
-            context->fdUnixSocket, arena, responseHeader.msgLen);
-
-    DataStream_Append(&responseData, &responseHeaderData, arena);
-    DataStream_Append(&responseData, &responseBodyData, arena);
-
-    return responseData;
+    return responseMessage;
 }
 
 void __UnixClient_DisconnectHandler(Client* client)

@@ -4,29 +4,26 @@
 #include <wetman/utils/net/return_code.h>
 
 ReturnCode Client_CallEndpoint(
-        Client*     client,
-        EndpointId  endpointId,
-        Arena*      arena,
-        DataStream* requestBody,
-        DataStream* responseData)
+        Client*  client,
+        EndpointId endpointId,
+        Arena*   arena,
+        Message* requestMessage,
+        Message* responseMessage)
 {
-    DataStream requestData = DataStream_New();
     RequestHeader requestHeader = {
         .endpointId = endpointId,
-        .msgLen     = requestBody->__data.len,
+        .msgLen     = requestMessage->body.__data.len,
     };
-    RequestHeader_Serialize(&requestHeader, &requestData, arena);
-    DataStream_Append(&requestData, requestBody, arena);
+    RequestHeader_Serialize(&requestHeader, &requestMessage->header, arena);
 
-    *responseData = client->__requestHandler(client, &requestData, arena);
+    *responseMessage = client->__requestHandler(client, requestMessage, arena);
 
-    if (responseData->lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    if (responseMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
-    DataStream responseHeaderData = *responseData;
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseHeaderData);
-    if (responseHeaderData.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage->header);
+    if (responseMessage->header.lastResult != DATA_STREAM_RESULT_SUCCESS) {
         return RETURN_CODE_FAILED_TO_PARSE_REQUEST;
     }
 

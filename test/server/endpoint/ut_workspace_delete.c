@@ -33,20 +33,20 @@ TEST(WorkspaceDeleteTest_CallEndpoint_Success)
         .workspaceName = Str_FromCStr("test_project"),
     };
 
-    DataStream initRequestData = DataStream_New();
-    Endpoint_WorkspaceInit_RequestSerializer(&initRequest, &initRequestData, &arena);
+    Message initRequestMessage = Message_New();
+    Endpoint_WorkspaceInit_RequestSerializer(&initRequest, &initRequestMessage, &arena);
 
-    DataStream initResponseData = EndpointRegistry_CallEndpoint(
+    Message initResponseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_WORKSPACE_INIT,
             &arena,
-            &initRequestData);
-    ResponseHeader initResponseHeader = ResponseHeader_Deserialize(&initResponseData);
+            &initRequestMessage);
+    ResponseHeader initResponseHeader = ResponseHeader_Deserialize(&initResponseMessage.header);
 
     EXPECT_EQ(initResponseHeader.returnCode, RETURN_CODE_OK);
 
     Endpoint_WorkspaceInit_Response initResponse;
-    Endpoint_WorkspaceInit_ResponseDeserializer(&initResponse, &initResponseData, &arena);
+    Endpoint_WorkspaceInit_ResponseDeserializer(&initResponse, &initResponseMessage, &arena);
     EXPECT_EQ(initResponse.workspaceId, 0);
 
     // Verify workspace exists
@@ -73,20 +73,20 @@ TEST(WorkspaceDeleteTest_CallEndpoint_Success)
         .workspaceId = 0,
     };
 
-    DataStream deleteRequestData = DataStream_New();
-    Endpoint_WorkspaceDelete_RequestSerializer(&deleteRequest, &deleteRequestData, &arena);
+    Message deleteRequestMessage = Message_New();
+    Endpoint_WorkspaceDelete_RequestSerializer(&deleteRequest, &deleteRequestMessage, &arena);
 
-    DataStream deleteResponseData = EndpointRegistry_CallEndpoint(
+    Message deleteResponseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_WORKSPACE_DELETE,
             &arena,
-            &deleteRequestData);
-    ResponseHeader deleteResponseHeader = ResponseHeader_Deserialize(&deleteResponseData);
+            &deleteRequestMessage);
+    ResponseHeader deleteResponseHeader = ResponseHeader_Deserialize(&deleteResponseMessage.header);
 
     EXPECT_EQ(deleteResponseHeader.returnCode, RETURN_CODE_OK);
 
     Endpoint_WorkspaceDelete_Response deleteResponse;
-    Endpoint_WorkspaceDelete_ResponseDeserializer(&deleteResponse, &deleteResponseData, &arena);
+    Endpoint_WorkspaceDelete_ResponseDeserializer(&deleteResponse, &deleteResponseMessage, &arena);
     EXPECT_EQ(deleteResponse.workspaceId, 0);
 
     // Verify workspace is deleted
@@ -112,15 +112,15 @@ TEST(WorkspaceDeleteTest_CallEndpoint_WorkspaceNotFound)
         .workspaceId = 999,
     };
 
-    DataStream requestData = DataStream_New();
-    Endpoint_WorkspaceDelete_RequestSerializer(&request, &requestData, &arena);
+    Message requestMessage = Message_New();
+    Endpoint_WorkspaceDelete_RequestSerializer(&request, &requestMessage, &arena);
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_WORKSPACE_DELETE,
             &arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_INTERNAL_ENDPOINT_ERROR);
 

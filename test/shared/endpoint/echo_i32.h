@@ -4,6 +4,7 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/type.h>
 #include <wetman/utils/net/macro.h>
+#include <wetman/utils/net/message.h>
 
 #define TEST_ENDPOINT_REQUEST_SERIALIZED_LEN (sizeof(i32) + sizeof(i32))
 #define TEST_ENDPOINT_RESPONSE_SERIALIZED_LEN (sizeof(i32) + sizeof(i32))
@@ -18,35 +19,35 @@ typedef struct {
 
 static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestSerializer(
         TestEndpointEchoI32_Request* req,
-        DataStream*                  ds,
+        Message*                     message,
         Arena*                       arena)
 {
-    DataStream_PushI32(ds, req->value, arena);
+    DataStream_PushI32(&message->body, req->value, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoI32_RequestDeserializer(
         TestEndpointEchoI32_Request* req,
-        DataStream*                  ds,
+        Message*                     message,
         Arena*                       arena)
 {
-    req->value = DataStream_PopI32(ds);
+    req->value = DataStream_PopI32(&message->body);
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseSerializer(
         TestEndpointEchoI32_Response* resp,
-        DataStream*                   ds,
+        Message*                      message,
         Arena*                        arena)
 {
-    DataStream_PushI32(ds, resp->value, arena);
+    DataStream_PushI32(&message->body, resp->value, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoI32_ResponseDeserializer(
         TestEndpointEchoI32_Response* resp,
-        DataStream*                   ds,
+        Message*                      message,
         Arena*                        arena)
 {
-    resp->value = DataStream_PopI32(ds);
+    resp->value = DataStream_PopI32(&message->body);
     (void)arena;
 }
 

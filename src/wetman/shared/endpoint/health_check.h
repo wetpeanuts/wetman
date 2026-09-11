@@ -5,6 +5,7 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/endpoint.h>
+#include <wetman/utils/net/message.h>
 
 
 // Empty struct is GNU extension
@@ -18,41 +19,41 @@ typedef struct {
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_RequestSerializer(
         Endpoint_HealthCheck_Request* req,
-        DataStream*                   ds,
+        Message*                      message,
         Arena*                        arena)
 {
     (void)req;
-    (void)ds;
+    (void)message;
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_RequestDeserializer(
         Endpoint_HealthCheck_Request* req,
-        DataStream*                   ds,
+        Message*                      message,
         Arena*                        arena)
 {
     (void)req;
-    (void)ds;
+    (void)message;
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseSerializer(
         Endpoint_HealthCheck_Response* resp,
-        DataStream*                    ds,
+        Message*                       message,
         Arena*                         arena)
 {
     (void)resp;
-    (void)ds;
+    (void)message;
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void Endpoint_HealthCheck_ResponseDeserializer(
         Endpoint_HealthCheck_Response* resp,
-        DataStream*                    ds,
+        Message*                       message,
         Arena*                         arena)
 {
     (void)resp;
-    (void)ds;
+    (void)message;
     (void)arena;
 }
 

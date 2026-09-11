@@ -4,6 +4,7 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/type.h>
 #include <wetman/utils/net/macro.h>
+#include <wetman/utils/net/message.h>
 
 typedef struct {
     Str value;
@@ -15,35 +16,35 @@ typedef struct {
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_RequestSerializer(
         TestEndpointEchoStr_Request* req,
-        DataStream*                  ds,
+        Message*                     message,
         Arena*                       arena)
 {
-    DataStream_PushStr(ds, req->value, arena);
+    DataStream_PushStr(&message->body, req->value, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_RequestDeserializer(
         TestEndpointEchoStr_Request* req,
-        DataStream*                  ds,
+        Message*                     message,
         Arena*                       arena)
 {
-    req->value = DataStream_PopStr(ds);
+    req->value = DataStream_PopStr(&message->body);
     (void)arena;
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseSerializer(
         TestEndpointEchoStr_Response* resp,
-        DataStream*                   ds,
+        Message*                      message,
         Arena*                        arena)
 {
-    DataStream_PushStr(ds, resp->value, arena);
+    DataStream_PushStr(&message->body, resp->value, arena);
 }
 
 static inline MAYBE_UNUSED void TestEndpointEchoStr_ResponseDeserializer(
         TestEndpointEchoStr_Response* resp,
-        DataStream*                   ds,
+        Message*                      message,
         Arena*                        arena)
 {
-    resp->value = DataStream_PopStr(ds);
+    resp->value = DataStream_PopStr(&message->body);
     (void)arena;
 }
 

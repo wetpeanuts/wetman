@@ -16,14 +16,14 @@ TEST(HealthCheckTest_CallEndpoint_Success)
     ASSERT_EQ(endpointRegistry.__endpoints[ENDPOINT_ID_HEALTH_CHECK].id, ENDPOINT_ID_HEALTH_CHECK);
 
     Arena arena = Arena_New();
-    DataStream requestData = DataStream_New();
+    Message requestMessage = Message_New();
 
-    DataStream responseData = EndpointRegistry_CallEndpoint(
+    Message responseMessage = EndpointRegistry_CallEndpoint(
             &endpointRegistry,
             ENDPOINT_ID_HEALTH_CHECK,
             &arena,
-            &requestData);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData);
+            &requestMessage);
+    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
 
     EXPECT_EQ(responseHeader.returnCode, RETURN_CODE_OK);
     EXPECT_EQ(responseHeader.msgLen, 0);

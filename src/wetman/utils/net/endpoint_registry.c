@@ -46,13 +46,13 @@ void EndpointRegistry_RegisterEndpoint(EndpointRegistry* endpointRegistry, Endpo
     endpointRegistry->__endpointCount++;
 }
 
-DataStream EndpointRegistry_CallEndpoint(
+Message EndpointRegistry_CallEndpoint(
         EndpointRegistry* endpointRegistry,
         EndpointId        endpointId,
         Arena*            arena,
-        DataStream*       requestData)
+        Message*          requestMessage)
 {
-    DataStream responseData = DataStream_New();
+    Message responseMessage = Message_New();
     ResponseHeader responseHeader = {
         .returnCode = RETURN_CODE_OK,
         .msgLen     = 0,
@@ -62,38 +62,35 @@ DataStream EndpointRegistry_CallEndpoint(
         fprintf(stderr, "Attempt to call endpoint with invalid ID: %d. Available ID range: [0-%d]\n",
                 endpointId, ENDPOINT_REGISTRY_MAX_ENDPOINT_COUNT - 1);
         responseHeader.returnCode = RETURN_CODE_INVALID_ENDPOINT_ID;
-        ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-        return responseData;
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
+        return responseMessage;
     }
 
     if (endpointRegistry->__endpoints[endpointId].id != endpointId) {
         fprintf(stderr, "Attempt to call non existent endpoint: ID = %d\n", endpointId);
         responseHeader.returnCode = RETURN_CODE_ENDPOINT_NOT_INITIALIZED;
-        ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-        return responseData;
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
+        return responseMessage;
     }
 
     Endpoint endpoint = endpointRegistry->__endpoints[endpointId];
     void* request = endpoint.requestFactory(arena);
     void* response = endpoint.responseFactory(arena);
-    endpoint.requestDeserializer(request, requestData, arena);
+    endpoint.requestDeserializer(request, requestMessage, arena);
 
-    if (requestData->lastResult != DATA_STREAM_RESULT_SUCCESS) {
-        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestData->lastResult);
+    if (requestMessage->body.lastResult != DATA_STREAM_RESULT_SUCCESS) {
+        fprintf(stderr, "Failed to parse request. Last parse error: %d\n", requestMessage->body.lastResult);
         responseHeader.returnCode = RETURN_CODE_FAILED_TO_PARSE_REQUEST;
-        ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-        return responseData;
+        ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
+        return responseMessage;
     }
 
     ReturnCode returnCode = endpoint.handler(request, response);
 
-    DataStream responseBodyData = DataStream_New();
-    endpoint.responseSerializer(response, &responseBodyData, arena);
+    endpoint.responseSerializer(response, &responseMessage, arena);
     responseHeader.returnCode = returnCode;
-    responseHeader.msgLen = responseBodyData.__data.len;
+    responseHeader.msgLen = responseMessage.body.__data.len;
+    ResponseHeader_Serialize(&responseHeader, &responseMessage.header, arena);
 
-    ResponseHeader_Serialize(&responseHeader, &responseData, arena);
-    DataStream_Append(&responseData, &responseBodyData, arena);
-
-    return responseData;
+    return responseMessage;
 }

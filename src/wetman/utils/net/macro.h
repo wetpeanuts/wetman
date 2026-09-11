@@ -22,14 +22,14 @@
                 (endpointName##_Response*)response); \
     } \
     \
-    void __Endpoint_##endpointName##_RequestSerializer(void* req, DataStream* ds, Arena* arena) \
+    void __Endpoint_##endpointName##_RequestSerializer(void* req, Message* message, Arena* arena) \
     { \
-        endpointName##_RequestSerializer((endpointName##_Request*)req, ds, arena); \
+        endpointName##_RequestSerializer((endpointName##_Request*)req, message, arena); \
     } \
     \
-    void __Endpoint_##endpointName##_RequestDeserializer(void* req, DataStream* ds, Arena* arena) \
+    void __Endpoint_##endpointName##_RequestDeserializer(void* req, Message* message, Arena* arena) \
     { \
-        endpointName##_RequestDeserializer((endpointName##_Request*)req, ds, arena); \
+        endpointName##_RequestDeserializer((endpointName##_Request*)req, message, arena); \
     } \
     \
     void* __Endpoint_##endpointName##_RequestFactory(Arena* arena) \
@@ -37,14 +37,14 @@
         return Arena_Alloc(arena, sizeof(endpointName##_Request)); \
     } \
     \
-    void __Endpoint_##endpointName##_ResponseSerializer(void* resp, DataStream* ds, Arena* arena) \
+    void __Endpoint_##endpointName##_ResponseSerializer(void* resp, Message* message, Arena* arena) \
     { \
-        endpointName##_ResponseSerializer((endpointName##_Response*)resp, ds, arena); \
+        endpointName##_ResponseSerializer((endpointName##_Response*)resp, message, arena); \
     } \
     \
-    void __Endpoint_##endpointName##_ResponseDeserializer(void* resp, DataStream* ds, Arena* arena) \
+    void __Endpoint_##endpointName##_ResponseDeserializer(void* resp, Message* message, Arena* arena) \
     { \
-        endpointName##_ResponseDeserializer((endpointName##_Response*)resp, ds, arena); \
+        endpointName##_ResponseDeserializer((endpointName##_Response*)resp, message, arena); \
     } \
     \
     void* __Endpoint_##endpointName##_ResponseFactory(Arena* arena) \
@@ -74,20 +74,20 @@
             endpointName##_Response* response, \
             Arena*                   arena) \
     { \
-        DataStream requestBody = DataStream_New(); \
-        endpointName##_RequestSerializer(request, &requestBody, arena); \
-        DataStream responseData = DataStream_New(); \
+        Message requestMessage = Message_New(); \
+        endpointName##_RequestSerializer(request, &requestMessage, arena); \
+        Message responseMessage = Message_New(); \
         ReturnCode returnCode = Client_CallEndpoint( \
                 client, \
                 endpointId, \
                 arena, \
-                &requestBody, \
-                &responseData); \
+                &requestMessage, \
+                &responseMessage); \
         if (returnCode == RETURN_CODE_OK) { \
-            ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseData); \
+            ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header); \
             returnCode = (ReturnCode)responseHeader.returnCode; \
             if (returnCode == RETURN_CODE_OK) { \
-                endpointName##_ResponseDeserializer(response, &responseData, arena); \
+                endpointName##_ResponseDeserializer(response, &responseMessage, arena); \
             } \
         } \
         return returnCode; \

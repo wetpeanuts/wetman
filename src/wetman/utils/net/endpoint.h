@@ -5,6 +5,8 @@
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/return_code.h>
 
+typedef struct Message Message;
+
 typedef struct {
     ReturnCode returnCode;
     void*      response;
@@ -12,11 +14,11 @@ typedef struct {
 
 typedef i32 EndpointId;
 typedef ReturnCode(*EndpointHandler)(void* /*req*/, void* /*resp*/);
-typedef void(*EndpointRequestSerializer)(void*, DataStream*, Arena*);
-typedef void(*EndpointRequestDeserializer)(void*, DataStream*, Arena*);
+typedef void(*EndpointRequestSerializer)(void*, Message*, Arena*);
+typedef void(*EndpointRequestDeserializer)(void*, Message*, Arena*);
 typedef void*(*EndpointRequestFactory)(Arena*);
-typedef void(*EndpointResponseSerializer)(void*, DataStream*, Arena*);
-typedef void(*EndpointResponseDeserializer)(void*, DataStream*, Arena*);
+typedef void(*EndpointResponseSerializer)(void*, Message*, Arena*);
+typedef void(*EndpointResponseDeserializer)(void*, Message*, Arena*);
 typedef void*(*EndpointResponseFactory)(Arena*);
 
 typedef struct {
@@ -30,9 +32,9 @@ typedef struct {
     EndpointResponseFactory      responseFactory;
 } Endpoint;
 
-DataStream Endpoint_Call(
-        Endpoint*   endpoint,
-        Arena*      arena,
-        DataStream* requestData);
+Message Endpoint_Call(
+        Endpoint* endpoint,
+        Arena*    arena,
+        Message*  requestMessage);
 
 #endif // WETMAN_UTILS_NET_ENDPOINT_H
