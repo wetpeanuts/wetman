@@ -16,10 +16,11 @@
             Arena*                arena);
 
 #define ENDPOINT_IMPL_SERVER(endpointId, endpointName) \
-    ReturnCode __Endpoint_##endpointName(void* request, void* response) { \
+    ReturnCode __Endpoint_##endpointName(void* request, void* response, Arena* arena) { \
         return endpointName( \
                 (endpointName##_Request*)request, \
-                (endpointName##_Response*)response); \
+                (endpointName##_Response*)response, \
+                arena); \
     } \
     \
     void __Endpoint_##endpointName##_RequestSerializer(void* req, Message* message, Arena* arena) \

@@ -12,11 +12,10 @@
 
 ReturnCode Endpoint_WorkspaceList(
         Endpoint_WorkspaceList_Request*  request,
-        Endpoint_WorkspaceList_Response* response)
+        Endpoint_WorkspaceList_Response* response,
+        Arena*                           arena)
 {
     (void)request;
-
-    Arena* arena = &globalServerContext.arena;
 
     VecU64 ids   = VecU64_WithCapacity(globalServerContext.nextWorkspaceId, arena);
     VecStr names = VecStr_WithCapacity(globalServerContext.nextWorkspaceId, arena);

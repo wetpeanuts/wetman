@@ -4,8 +4,10 @@
 
 ReturnCode TestEndpointEchoStr(
         TestEndpointEchoStr_Request*  request,
-        TestEndpointEchoStr_Response* response)
+        TestEndpointEchoStr_Response* response,
+        Arena*                        arena)
 {
+    (void)arena;
     response->value = request->value;
     return RETURN_CODE_OK;
 }

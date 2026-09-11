@@ -26,6 +26,11 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `ENDPOINT_IMPL_SERVER` and `client/endpoint/` adds `ENDPOINT_DECLARE_CLIENT` +
   `ENDPOINT_IMPL_CLIENT`. The client binary must include the shared +
   client endpoint `mod.c` trees to see the serializers.
+- Server endpoint handlers take a third `Arena*` param:
+  `Endpoint_<Name>(Request*, Response*, Arena* arena)`. It is the per-request
+  arena owned by the server: allocate all intermediate + response data (Str,
+  slices, ...) from it; it stays valid until the response is written back to
+  the client. Never allocate from `globalServerContext.arena` in handlers.
 - An endpoint only works after it is registered in `server/main.c`
   (`EndpointRegistry_RegisterEndpoint(&reg, Endpoint_<Name>_Create())`);
   skipping registration compiles fine but clients get

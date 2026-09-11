@@ -12,59 +12,55 @@
 
 ReturnCode Endpoint_WorkspaceInit(
         Endpoint_WorkspaceInit_Request*  request,
-        Endpoint_WorkspaceInit_Response* response)
+        Endpoint_WorkspaceInit_Response* response,
+        Arena*                           arena)
 {
     if (!FS_CheckExists(request->workspacePath)) {
         // Project dir does not exist
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
-    Arena arena = Arena_New();
     Str workspaceDir = Str_FromCStr(".wetman");
     Str workspacePath = FS_PathJoin(
             request->workspacePath,
             workspaceDir,
-            &arena);
+            arena);
 
     if (FS_CheckExists(workspacePath)) {
         // Workspace already exists
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     if (!FS_CreateDir(workspacePath)) {
         // Failed to create workspace
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     Str workspaceConfigPath = FS_PathJoin(
             workspacePath,
             Str_FromCStr("workspace.wmwscfg"),
-            &arena);
+            arena);
     const i32 fdWorkspaceConfig = FS_OpenFile(
             workspaceConfigPath, O_WRONLY | O_CREAT | O_EXCL);
     if (fdWorkspaceConfig == -1) {
         // Failed to create workspace config
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
     close(fdWorkspaceConfig);
 
 response->workspaceId =
-        ServerContext_InitWorkspace(workspaceConfigPath, &arena);
+        ServerContext_InitWorkspace(workspaceConfigPath, arena);
 
-    Str workspaceDirName = Str_FromU64((u64)response->workspaceId, &arena);
+    Str workspaceDirName = Str_FromU64((u64)response->workspaceId, arena);
     Str workspaceDirPath = FS_PathJoin(
             globalServerContext.workspacesPath,
             workspaceDirName,
-            &arena);
+            arena);
     Str tasksDir = FS_PathJoin(
             workspaceDirPath,
             Str_FromCStr("tasks"),
-            &arena);
+            arena);
     if (!FS_CreateDir(tasksDir)) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
@@ -77,11 +73,8 @@ response->workspaceId =
 
     PersistenceStatus status = WorkspaceConfig_Write(workspaceConfigPath, &config);
     if (status != PERSISTENCE_STATUS_OK) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
-
-    Arena_Free(&arena);
 
     return RETURN_CODE_OK;
 }

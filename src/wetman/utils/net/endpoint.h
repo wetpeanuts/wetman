@@ -13,7 +13,7 @@ typedef struct {
 } EndpointResponse;
 
 typedef i32 EndpointId;
-typedef ReturnCode(*EndpointHandler)(void* /*req*/, void* /*resp*/);
+typedef ReturnCode(*EndpointHandler)(void* /*req*/, void* /*resp*/, Arena* /*arena*/);
 typedef void(*EndpointRequestSerializer)(void*, Message*, Arena*);
 typedef void(*EndpointRequestDeserializer)(void*, Message*, Arena*);
 typedef void*(*EndpointRequestFactory)(Arena*);

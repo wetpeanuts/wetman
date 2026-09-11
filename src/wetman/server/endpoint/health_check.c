@@ -6,11 +6,13 @@
 
 
 ReturnCode Endpoint_HealthCheck(
-        Endpoint_HealthCheck_Request* request,
-        Endpoint_HealthCheck_Response* response)
+        Endpoint_HealthCheck_Request*  request,
+        Endpoint_HealthCheck_Response* response,
+        Arena*                         arena)
 {
     (void)request;
     (void)response;
+    (void)arena;
 
     return RETURN_CODE_OK;
 }
