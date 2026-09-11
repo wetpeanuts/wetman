@@ -2,6 +2,7 @@
 
 #include "it_healthcheck.c"
 #include "it_workspace.c"
+#include "it_task.c"
 
 // Tmp dir macros work only in the context of the test case,
 // so we need to wrap it into a separate test
@@ -46,6 +47,7 @@ void registerIntegrationTests(void)
     REGISTER_TEST(IntegrationTest_HealthCheck_Success);
     REGISTER_TEST(IntegrationTest_Workspace_InitDelete_DefaultArgs);
     REGISTER_TEST(IntegrationTest_Workspace_InitDelete_NamedArgs);
+    REGISTER_TEST(IntegrationTest_Task_Get);
 
     REGISTER_TEST(IntegrationTest_ShutDownServer);
 }
