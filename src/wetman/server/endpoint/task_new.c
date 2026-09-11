@@ -33,55 +33,50 @@ static Str __Endpoint_TaskNew_BuildShellScript(
 
 ReturnCode Endpoint_TaskNew(
         Endpoint_TaskNew_Request*  request,
-        Endpoint_TaskNew_Response* response)
+        Endpoint_TaskNew_Response* response,
+        Arena*                     arena)
 {
-    Arena arena = Arena_New();
-
-    Str workspaceDirName = Str_FromU64((u64)request->workspaceId, &arena);
+    Str workspaceDirName = Str_FromU64((u64)request->workspaceId, arena);
     Str workspaceDir = FS_PathJoin(
             globalServerContext.workspacesPath,
             workspaceDirName,
-            &arena);
+            arena);
 
     if (!FS_CheckExists(workspaceDir)) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     Str configPath = FS_PathJoin(
             workspaceDir,
             Str_FromCStr("workspace.wmwscfg"),
-            &arena);
+            arena);
 
     PersistenceStatus status;
-    WorkspaceConfig config = WorkspaceConfig_Read(configPath, &arena, &status);
+    WorkspaceConfig config = WorkspaceConfig_Read(configPath, arena, &status);
     if (status != PERSISTENCE_STATUS_OK) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     const usize taskId = config.nextTaskId;
     response->taskId = taskId;
 
-    Str taskName = Str_Concat(Str_FromCStr(""), request->taskName, &arena);
+    Str taskName = Str_Concat(Str_FromCStr(""), request->taskName, arena);
 
     Str tasksDir = FS_PathJoin(
             workspaceDir,
             Str_FromCStr("tasks"),
-            &arena);
+            arena);
     FS_CreateDir(tasksDir);
 
-    Str taskDirName = Str_FromU64((u64)taskId, &arena);
-    Str taskDir = FS_PathJoin(tasksDir, taskDirName, &arena);
+    Str taskDirName = Str_FromU64((u64)taskId, arena);
+    Str taskDir = FS_PathJoin(tasksDir, taskDirName, arena);
     if (!FS_CreateDir(taskDir)) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
-    Str taskShPath = FS_PathJoin(taskDir, Str_FromCStr("task.sh"), &arena);
+    Str taskShPath = FS_PathJoin(taskDir, Str_FromCStr("task.sh"), arena);
     i32 fdTaskSh = FS_OpenFile(taskShPath, O_WRONLY | O_CREAT | O_TRUNC);
     if (fdTaskSh == -1) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
     fchmod(fdTaskSh, S_IRWXU);
@@ -90,15 +85,14 @@ ReturnCode Endpoint_TaskNew(
             taskId,
             taskName,
             config.workspacePath,
-            &arena);
+            arena);
     MAYBE_UNUSED isize bytesWritten =
             write(fdTaskSh, taskShContent.data, taskShContent.len);
     close(fdTaskSh);
 
-    Str taskStatePath = FS_PathJoin(taskDir, Str_FromCStr("task.wmtsk"), &arena);
+    Str taskStatePath = FS_PathJoin(taskDir, Str_FromCStr("task.wmtsk"), arena);
     i32 fdTaskState = FS_OpenFile(taskStatePath, O_WRONLY | O_CREAT | O_TRUNC);
     if (fdTaskState == -1) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
     close(fdTaskState);
@@ -109,18 +103,14 @@ ReturnCode Endpoint_TaskNew(
     };
     status = TaskState_Write(taskStatePath, &taskState);
     if (status != PERSISTENCE_STATUS_OK) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     config.nextTaskId = taskId + 1;
     status = WorkspaceConfig_Write(configPath, &config);
     if (status != PERSISTENCE_STATUS_OK) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
-
-    Arena_Free(&arena);
 
     return RETURN_CODE_OK;
 }

@@ -10,13 +10,12 @@
 
 ReturnCode Endpoint_TaskGet(
         Endpoint_TaskGet_Request*  request,
-        Endpoint_TaskGet_Response* response)
+        Endpoint_TaskGet_Response* response,
+        Arena*                     arena)
 {
     response->taskId   = 0;
     response->taskName = Str_FromCStr("");
     response->taskPath = Str_FromCStr("");
-
-    Arena* arena = &globalServerContext.arena;
 
     Str workspaceDirName = Str_FromU64((u64)request->workspaceId, arena);
     Str workspaceDir = FS_PathJoin(

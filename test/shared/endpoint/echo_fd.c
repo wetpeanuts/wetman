@@ -4,8 +4,10 @@
 
 ReturnCode TestEndpointEchoFd(
         TestEndpointEchoFd_Request*  request,
-        TestEndpointEchoFd_Response* response)
+        TestEndpointEchoFd_Response* response,
+        Arena*                       arena)
 {
+    (void)arena;
     response->fd = request->fd;
     return RETURN_CODE_OK;
 }

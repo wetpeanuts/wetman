@@ -13,30 +13,27 @@
 
 ReturnCode Endpoint_WorkspaceDelete(
         Endpoint_WorkspaceDelete_Request*  request,
-        Endpoint_WorkspaceDelete_Response* response)
+        Endpoint_WorkspaceDelete_Response* response,
+        Arena*                             arena)
 {
-    Arena arena = Arena_New();
-
-    Str workspaceDirName = Str_FromU64((u64)request->workspaceId, &arena);
+    Str workspaceDirName = Str_FromU64((u64)request->workspaceId, arena);
     Str workspaceDir = FS_PathJoin(
             globalServerContext.workspacesPath,
             workspaceDirName,
-            &arena);
+            arena);
 
     if (!FS_CheckExists(workspaceDir)) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     Str configPath = FS_PathJoin(
             workspaceDir,
             Str_FromCStr("workspace.wmwscfg"),
-            &arena);
+            arena);
 
     PersistenceStatus status;
-    WorkspaceConfig config = WorkspaceConfig_Read(configPath, &arena, &status);
+    WorkspaceConfig config = WorkspaceConfig_Read(configPath, arena, &status);
     if (status != PERSISTENCE_STATUS_OK) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
@@ -48,12 +45,10 @@ ReturnCode Endpoint_WorkspaceDelete(
             (i32)config.workspacePath.len,
             config.workspacePath.data);
     if (n < 0 || (usize)n >= sizeof(wetmanDirBuf)) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     if (FS_RemoveDirectoryRecursive(wetmanDirBuf) == -1) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
@@ -65,18 +60,14 @@ ReturnCode Endpoint_WorkspaceDelete(
             (i32)workspaceDir.len,
             workspaceDir.data);
     if (n < 0 || (usize)n >= sizeof(workspaceDirBuf)) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     if (FS_RemoveDirectoryRecursive(workspaceDirBuf) == -1) {
-        Arena_Free(&arena);
         return RETURN_CODE_INTERNAL_ENDPOINT_ERROR;
     }
 
     response->workspaceId = request->workspaceId;
-
-    Arena_Free(&arena);
 
     return RETURN_CODE_OK;
 }

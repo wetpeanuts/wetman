@@ -34,7 +34,7 @@ Message Endpoint_Call(
         return responseMessage;
     }
 
-    ReturnCode returnCode = endpoint->handler(request, response);
+    ReturnCode returnCode = endpoint->handler(request, response, arena);
 
     endpoint->responseSerializer(response, &responseMessage, arena);
     responseHeader.returnCode = returnCode;
