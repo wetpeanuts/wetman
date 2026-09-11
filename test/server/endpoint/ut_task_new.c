@@ -15,59 +15,7 @@
 #include <wetman/utils/net/message.h>
 #include <wetman/utils/test/macro.h>
 
-
-static ReturnCode InitTestWorkspace(
-        EndpointRegistry* endpointRegistry,
-        Arena*            arena,
-        const char*       projectDir,
-        const char*       workspaceName)
-{
-    Endpoint_WorkspaceInit_Request request = {
-        .workspacePath = Str_FromCStr(projectDir),
-        .workspaceName = Str_FromCStr(workspaceName),
-    };
-
-    Message requestMessage = Message_New();
-    Endpoint_WorkspaceInit_RequestSerializer(&request, &requestMessage, arena);
-
-    Message responseMessage = EndpointRegistry_CallEndpoint(
-            endpointRegistry,
-            ENDPOINT_ID_WORKSPACE_INIT,
-            arena,
-            &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
-
-    return (ReturnCode)responseHeader.returnCode;
-}
-
-static ReturnCode CreateTask(
-        EndpointRegistry*           endpointRegistry,
-        Arena*                      arena,
-        usize                       workspaceId,
-        const char*                 taskName,
-        Endpoint_TaskNew_Response*  response)
-{
-    Endpoint_TaskNew_Request request = {
-        .workspaceId = workspaceId,
-        .taskName    = Str_FromCStr(taskName),
-    };
-
-    Message requestMessage = Message_New();
-    Endpoint_TaskNew_RequestSerializer(&request, &requestMessage, arena);
-
-    Message responseMessage = EndpointRegistry_CallEndpoint(
-            endpointRegistry,
-            ENDPOINT_ID_TASK_NEW,
-            arena,
-            &requestMessage);
-    ResponseHeader responseHeader = ResponseHeader_Deserialize(&responseMessage.header);
-
-    if (responseHeader.returnCode == RETURN_CODE_OK) {
-        Endpoint_TaskNew_ResponseDeserializer(response, &responseMessage, arena);
-    }
-
-    return (ReturnCode)responseHeader.returnCode;
-}
+#include "utils.h"
 
 
 TEST(TaskNewTest_CallEndpoint_Success)

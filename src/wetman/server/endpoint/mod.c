@@ -6,6 +6,7 @@
 #include <wetman/server/endpoint/workspace_delete.c>
 #include <wetman/server/endpoint/workspace_list.c>
 #include <wetman/server/endpoint/task_new.c>
+#include <wetman/server/endpoint/task_get.c>
 
 #endif // WETMAN_SERVER_ENDPOINT_MOD_C
 
