@@ -10,6 +10,7 @@
 #include <wetman/client/commands/workspace_list.h>
 #include <wetman/client/commands/task_new.h>
 #include <wetman/client/commands/task_get.h>
+#include <wetman/client/commands/task_edit.h>
 
 #include <wetman/client/mod.c>
 
@@ -26,6 +27,7 @@ static void PrintUsage(FILE* out)
             "  workspace list           List all workspaces\n"
             "  task new <name>          Create a new task\n"
             "  task get <id>            Show task info\n"
+            "  task edit <id>           Edit task shell script\n"
             "\n"
             "Options:\n"
             "  -n, --name <name>        Workspace name (default: current directory name)\n"
@@ -44,6 +46,7 @@ int main(int argc, char** argv)
     CommandParser_RegisterCommand(&parser, Command_WorkspaceList_Create(&globalClientContext.arena));
     CommandParser_RegisterCommand(&parser, Command_TaskNew_Create(&globalClientContext.arena));
     CommandParser_RegisterCommand(&parser, Command_TaskGet_Create(&globalClientContext.arena));
+    CommandParser_RegisterCommand(&parser, Command_TaskEdit_Create(&globalClientContext.arena));
 
     if (argc < 2 ||
             strcmp(argv[1], "-h") == 0 ||
