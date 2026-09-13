@@ -10,5 +10,6 @@
 #include <wetman/client/commands/task_new.c>
 #include <wetman/client/commands/task_get.c>
 #include <wetman/client/commands/task_edit.c>
+#include <wetman/client/commands/task_print.c>
 
 #endif // WETMAN_CLIENT_COMMANDS_MOD_C

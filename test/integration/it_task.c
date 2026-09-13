@@ -180,3 +180,75 @@ TEST(IntegrationTest_Task_Edit)
         ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("task_edited_content_named")) >= 0);
     }
 }
+
+TEST(IntegrationTest_Task_Print)
+{
+    char parent[256];
+    CREATE_TMP_DIR(parent);
+
+    char projPath[512];
+    ASSERT_EQ(CreateProjectDir(parent, "projPrint", projPath, sizeof(projPath)), 0);
+
+    char outInit[512];
+    snprintf(outInit, sizeof(outInit), "%s/init.txt", parent);
+    char outNew[512];
+    snprintf(outNew, sizeof(outNew), "%s/new.txt", parent);
+
+    usize workspaceId = 0;
+    EXPECT_EQ(RunWetman(projPath, "workspace init", outInit), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outInit, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseInitId(buf, &workspaceId), 0);
+    }
+
+    usize taskId = 0;
+    EXPECT_EQ(RunWetman(projPath, "task new printed_task", outNew), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outNew, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseTaskId(buf, &taskId), 0);
+    }
+
+    char editorRel[512];
+    snprintf(editorRel, sizeof(editorRel), "%s/editor.sh", parent);
+    char editorPath[512];
+    GetAbsolutePath(editorRel, editorPath, sizeof(editorPath));
+    ASSERT_EQ(WriteEditorScript(editorPath, "printed_marker"), 0);
+
+    char wetmanPath[1024];
+    GetAbsolutePath("../build/wetman", wetmanPath, sizeof(wetmanPath));
+
+    char outEdit[512];
+    snprintf(outEdit, sizeof(outEdit), "%s/edit.txt", parent);
+    char editCmd[2048];
+    snprintf(editCmd, sizeof(editCmd),
+            "(cd %s && WETMAN_EDITOR=%s %s task edit 0) > %s 2>&1",
+            projPath, editorPath, wetmanPath, outEdit);
+    EXPECT_EQ(Subprocess_WaitFor(Subprocess_RunCommand(editCmd), 5000), 0);
+
+    char outPrint[512];
+    snprintf(outPrint, sizeof(outPrint), "%s/print.txt", parent);
+    EXPECT_EQ(RunWetman(projPath, "task print 0", outPrint), 0);
+    {
+        char buf[512];
+        ASSERT_EQ(ReadFile(outPrint, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("printed_marker")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Uninitialized task")) < 0);
+    }
+
+    char outPrintNamed[512];
+    snprintf(outPrintNamed, sizeof(outPrintNamed), "%s/print_named.txt", parent);
+    char printNamedCmd[256];
+    snprintf(printNamedCmd, sizeof(printNamedCmd),
+            "task print -w %llu %llu",
+            (unsigned long long)workspaceId,
+            (unsigned long long)taskId);
+    EXPECT_EQ(RunWetman(NULL, printNamedCmd, outPrintNamed), 0);
+    {
+        char buf[512];
+        ASSERT_EQ(ReadFile(outPrintNamed, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("printed_marker")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Uninitialized task")) < 0);
+    }
+}
