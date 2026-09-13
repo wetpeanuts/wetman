@@ -13,9 +13,12 @@ TEST(IntegrationTest_RunServer)
     char wdir[256];
     CREATE_TMP_DIR(wdir);
 
+    char wdirAbs[256];
+    GetAbsolutePath(wdir, wdirAbs, sizeof(wdirAbs));
+
     char serverCmd[512];
     snprintf(serverCmd, sizeof(serverCmd),
-            "WETMAN_WDIR=%s ../build/wetman_server", wdir);
+            "WETMAN_WDIR=%s ../build/wetman_server", wdirAbs);
 
     __serverPid = Subprocess_RunCommand(serverCmd);
     ASSERT_NE(__serverPid, -1);
@@ -48,6 +51,7 @@ void registerIntegrationTests(void)
     REGISTER_TEST(IntegrationTest_Workspace_InitDelete_DefaultArgs);
     REGISTER_TEST(IntegrationTest_Workspace_InitDelete_NamedArgs);
     REGISTER_TEST(IntegrationTest_Task_Get);
+    REGISTER_TEST(IntegrationTest_Task_Edit);
 
     REGISTER_TEST(IntegrationTest_ShutDownServer);
 }
