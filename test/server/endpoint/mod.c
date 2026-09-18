@@ -6,6 +6,7 @@
 #include "ut_workspace_list.c"
 #include "ut_task_new.c"
 #include "ut_task_get.c"
+#include "ut_task_list.c"
 
 void registerServerEndpointTests(void)
 {
@@ -20,5 +21,8 @@ void registerServerEndpointTests(void)
     REGISTER_TEST(TaskGetTest_CallEndpoint_Success);
     REGISTER_TEST(TaskGetTest_CallEndpoint_TaskNotFound);
     REGISTER_TEST(TaskGetTest_CallEndpoint_WorkspaceNotFound);
+    REGISTER_TEST(TaskListTest_CallEndpoint_Success);
+    REGISTER_TEST(TaskListTest_CallEndpoint_Empty);
+    REGISTER_TEST(TaskListTest_CallEndpoint_WorkspaceNotFound);
 }
 
