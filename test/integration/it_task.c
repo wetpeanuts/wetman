@@ -70,6 +70,113 @@ TEST(IntegrationTest_Task_Get)
     }
 }
 
+TEST(IntegrationTest_Task_List)
+{
+    char parent[256];
+    CREATE_TMP_DIR(parent);
+
+    char projPath[512];
+    ASSERT_EQ(CreateProjectDir(parent, "projList", projPath, sizeof(projPath)), 0);
+
+    char outInit[512];
+    snprintf(outInit, sizeof(outInit), "%s/init.txt", parent);
+    char outNewOne[512];
+    snprintf(outNewOne, sizeof(outNewOne), "%s/new_one.txt", parent);
+    char outNewTwo[512];
+    snprintf(outNewTwo, sizeof(outNewTwo), "%s/new_two.txt", parent);
+    char outList[512];
+    snprintf(outList, sizeof(outList), "%s/list.txt", parent);
+    char outListNamed[512];
+    snprintf(outListNamed, sizeof(outListNamed), "%s/list_named.txt", parent);
+
+    usize workspaceId = 0;
+    EXPECT_EQ(RunWetman(projPath, "workspace init", outInit), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outInit, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseInitId(buf, &workspaceId), 0);
+    }
+
+    usize taskIdOne = 0;
+    EXPECT_EQ(RunWetman(projPath, "task new list_task_one", outNewOne), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outNewOne, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseTaskId(buf, &taskIdOne), 0);
+    }
+
+    usize taskIdTwo = 0;
+    EXPECT_EQ(RunWetman(projPath, "task new list_task_two", outNewTwo), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outNewTwo, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseTaskId(buf, &taskIdTwo), 0);
+    }
+
+    EXPECT_NE(taskIdOne, taskIdTwo);
+
+    EXPECT_EQ(RunWetman(projPath, "task list", outList), 0);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outList, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("ID")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Name")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Path")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("list_task_one")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("list_task_two")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("task.sh")) >= 0);
+    }
+
+    char listNamedCmd[256];
+    snprintf(listNamedCmd, sizeof(listNamedCmd),
+            "task list -w %llu",
+            (unsigned long long)workspaceId);
+    EXPECT_EQ(RunWetman(NULL, listNamedCmd, outListNamed), 0);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outListNamed, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("list_task_one")) >= 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("list_task_two")) >= 0);
+    }
+}
+
+TEST(IntegrationTest_Task_List_Empty)
+{
+    char parent[256];
+    CREATE_TMP_DIR(parent);
+
+    char projPath[512];
+    ASSERT_EQ(CreateProjectDir(parent, "projListEmpty", projPath, sizeof(projPath)), 0);
+
+    char outInit[512];
+    snprintf(outInit, sizeof(outInit), "%s/init.txt", parent);
+    char outList[512];
+    snprintf(outList, sizeof(outList), "%s/list.txt", parent);
+
+    usize workspaceId = 0;
+    EXPECT_EQ(RunWetman(projPath, "workspace init", outInit), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outInit, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseInitId(buf, &workspaceId), 0);
+    }
+
+    char listNamedCmd[256];
+    snprintf(listNamedCmd, sizeof(listNamedCmd),
+            "task list -w %llu",
+            (unsigned long long)workspaceId);
+    EXPECT_EQ(RunWetman(NULL, listNamedCmd, outList), 0);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outList, buf, sizeof(buf)), 0);
+        Str haystack = Str_FromCStr(buf);
+        ASSERT(Str_Contains(haystack, Str_FromCStr("ID")) >= 0);
+        ASSERT(Str_Contains(haystack, Str_FromCStr("Name")) >= 0);
+        ASSERT(Str_Contains(haystack, Str_FromCStr("Path")) >= 0);
+        ASSERT(Str_Contains(haystack, Str_FromCStr("0")) < 0);
+    }
+}
+
 static int WriteEditorScript(const char* path, const char* content)
 {
     FILE* file = fopen(path, "w");

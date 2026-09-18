@@ -51,6 +51,8 @@ void registerIntegrationTests(void)
     REGISTER_TEST(IntegrationTest_Workspace_InitDelete_DefaultArgs);
     REGISTER_TEST(IntegrationTest_Workspace_InitDelete_NamedArgs);
     REGISTER_TEST(IntegrationTest_Task_Get);
+    REGISTER_TEST(IntegrationTest_Task_List);
+    REGISTER_TEST(IntegrationTest_Task_List_Empty);
     REGISTER_TEST(IntegrationTest_Task_Edit);
     REGISTER_TEST(IntegrationTest_Task_Print);
 

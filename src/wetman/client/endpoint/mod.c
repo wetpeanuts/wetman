@@ -7,5 +7,6 @@
 #include <wetman/client/endpoint/workspace_list.c>
 #include <wetman/client/endpoint/task_new.c>
 #include <wetman/client/endpoint/task_get.c>
+#include <wetman/client/endpoint/task_list.c>
 
 #endif // WETMAN_CLIENT_ENDPOINT_MOD_C
