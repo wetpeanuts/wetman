@@ -359,3 +359,73 @@ TEST(IntegrationTest_Task_Print)
         ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Uninitialized task")) < 0);
     }
 }
+
+TEST(IntegrationTest_Task_Delete)
+{
+    char parent[256];
+    CREATE_TMP_DIR(parent);
+
+    char projPath[512];
+    ASSERT_EQ(CreateProjectDir(parent, "projDelete", projPath, sizeof(projPath)), 0);
+
+    char outInit[512];
+    snprintf(outInit, sizeof(outInit), "%s/init.txt", parent);
+    char outNew[512];
+    snprintf(outNew, sizeof(outNew), "%s/new.txt", parent);
+    char outDelete[512];
+    snprintf(outDelete, sizeof(outDelete), "%s/delete.txt", parent);
+    char outGetMiss[512];
+    snprintf(outGetMiss, sizeof(outGetMiss), "%s/get_miss.txt", parent);
+
+    usize workspaceId = 0;
+    EXPECT_EQ(RunWetman(projPath, "workspace init", outInit), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outInit, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseInitId(buf, &workspaceId), 0);
+    }
+
+    usize taskId = 0;
+    EXPECT_EQ(RunWetman(projPath, "task new delete_me", outNew), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outNew, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseTaskId(buf, &taskId), 0);
+    }
+
+    EXPECT_EQ(RunWetman(projPath, "task delete 0", outDelete), 0);
+    {
+        char buf[512];
+        ASSERT_EQ(ReadFile(outDelete, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("deleted")) >= 0);
+    }
+
+    EXPECT_EQ(RunWetman(projPath, "task get 0", outGetMiss), 4);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outGetMiss, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("status code: 4")) >= 0);
+    }
+
+    usize taskIdTwo = 0;
+    EXPECT_EQ(RunWetman(projPath, "task new second_task", outNew), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outNew, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseTaskId(buf, &taskIdTwo), 0);
+    }
+
+    char outDeleteNamed[512];
+    snprintf(outDeleteNamed, sizeof(outDeleteNamed), "%s/delete_named.txt", parent);
+    char deleteNamedCmd[256];
+    snprintf(deleteNamedCmd, sizeof(deleteNamedCmd),
+            "task delete -w %llu %llu",
+            (unsigned long long)workspaceId,
+            (unsigned long long)taskIdTwo);
+    EXPECT_EQ(RunWetman(NULL, deleteNamedCmd, outDeleteNamed), 0);
+    {
+        char buf[512];
+        ASSERT_EQ(ReadFile(outDeleteNamed, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("deleted")) >= 0);
+    }
+}
