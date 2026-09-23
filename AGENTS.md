@@ -45,7 +45,10 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   `workspace list`, `task new <name>`,
   `task get [-w|--workspace <id>] <taskId>`, `-h/--help`. Adding a command =
   create `commands/<name>.c` + `.h`, add `#include` to `commands/mod.c`, and
-  register in `main.c`.
+  register in `main.c`. Deleting a task (`task delete
+  [-w|--workspace <id>] <taskId>`) calls the `task_delete` endpoint, which
+  removes the task directory `<workspace>/tasks/<taskId>` on the server
+  (task ids stay monotonic — `nextTaskId` is not rewound).
 - Request/response structs (except stateless ones) allocate any resources they
   own (slices, strings) into the `Arena*` passed to the shared inline
   deserializers `Endpoint_<Name>_RequestDeserializer(req, Message*, Arena*)` /
