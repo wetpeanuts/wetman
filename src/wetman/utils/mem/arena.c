@@ -2,6 +2,10 @@
 
 #include <wetman/utils/macro.h>
 
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+#include <wetman/utils/mem/memory_tracker.h>
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -50,6 +54,11 @@ Arena Arena_WithPageCapacity(size_t capacity)
         .__tailPage = headPage,
     };
 
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    // Assigns __id before the struct is copied out by value.
+    MemoryTracker_ArenaCreated(&arena);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
+
     return arena;
 }
 
@@ -62,6 +71,9 @@ void* Arena_Alloc(Arena* arena, size_t size)
     if (newSize <= tailPage->__capacity) {
         void* data = __pageData(tailPage, tailPage->__size);
         tailPage->__size = newSize;
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+        MemoryTracker_MemoryAllocated(arena->__id, size);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
         return data;
     }
 
@@ -71,6 +83,9 @@ void* Arena_Alloc(Arena* arena, size_t size)
     newTailPage->__size = size;
     newTailPage->__prevPage = arena->__tailPage;
     arena->__tailPage = newTailPage;
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    MemoryTracker_MemoryAllocated(arena->__id, size);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
     return data;
 }
 
@@ -84,6 +99,9 @@ void* Arena_AllocWithPage(Arena* arena, size_t size, void** page)
         void* data = __pageData(tailPage, tailPage->__size);
         tailPage->__size = newSize;
         *page = tailPage;
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+        MemoryTracker_MemoryAllocated(arena->__id, size);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
         return data;
     }
 
@@ -94,6 +112,9 @@ void* Arena_AllocWithPage(Arena* arena, size_t size, void** page)
     newTailPage->__prevPage = arena->__tailPage;
     arena->__tailPage = newTailPage;
     *page = newTailPage;
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    MemoryTracker_MemoryAllocated(arena->__id, size);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
     return data;
 }
 
@@ -109,7 +130,7 @@ void* Arena_CanAllocOnSamePage(Arena* arena, size_t size)
     return NULL;
 }
 
-void Arena_Reset(Arena* arena)
+static void __Arena_ResetPages(Arena* arena)
 {
     assert(arena->__tailPage);
 
@@ -125,15 +146,29 @@ void Arena_Reset(Arena* arena)
     arena->__tailPage = currTailPage;
 }
 
+void Arena_Reset(Arena* arena)
+{
+    __Arena_ResetPages(arena);
+
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    MemoryTracker_ArenaReset(arena->__id);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
+}
+
 void Arena_Free(Arena* arena)
 {
     // Clean all pages except the first one
-    Arena_Reset(arena);
+    __Arena_ResetPages(arena);
 
     // Clean the last page, nullify head ptr
     free(arena->__headPage);
     arena->__headPage = NULL;
     arena->__tailPage = NULL;
+
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    // After __Arena_ResetPages, not Arena_Reset, to avoid a RESET event.
+    MemoryTracker_ArenaFreed(arena->__id);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
 }
 
 int Arena_IsValid(const Arena* arena)

@@ -6,6 +6,7 @@
 #include <wetman/utils/macro.h>
 #include <wetman/utils/mem/arena.h>
 #include <wetman/utils/net/message.h>
+#include <wetman/utils/proc/signal.h>
 #include <wetman/utils/type.h>
 
 #include <assert.h>
@@ -379,6 +380,12 @@ void __Server_HandleWritable(__ClientConn* conn)
 void __Server_MainIter(Callback* callbackMeta)
 {
     __ServerMainContext* ctx = (__ServerMainContext*)callbackMeta->payload;
+
+    if (Signal_ShutdownRequested()) {
+        // Do not re-push: EventLoop_Exec drains and Server_Run unwinds,
+        // running the normal connection and socket cleanup.
+        return;
+    }
 
     struct pollfd pfds[1 + __SERVER_MAX_CLIENTS];
     int           connIndices[1 + __SERVER_MAX_CLIENTS];

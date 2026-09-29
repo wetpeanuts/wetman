@@ -15,9 +15,23 @@
 
 #include <wetman/server/mod.c>
 
+#include <wetman/utils/proc/signal.h>
+
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+#include <wetman/utils/mem/memory_tracker.h>
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
 
 int main(void)
 {
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    MemoryTracker_Init(STDOUT_FILENO);
+
+    // Ctrl+C sends SIGINT, Subprocess_Kill sends SIGTERM. Both request a
+    // graceful shutdown so buffered events still get flushed.
+    Signal_InstallShutdownHandler(SIGINT);
+    Signal_InstallShutdownHandler(SIGTERM);
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
+
     Arena arena = Arena_New();
     char *wdirEnv = getenv("WETMAN_WDIR");
     Str wdir = wdirEnv
@@ -59,6 +73,11 @@ int main(void)
     ServerContext_Destroy();
     ServerLock_Release();
 
-    return result;
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+    MemoryTracker_FlushEvents();
+#endif // WETMAN_ENABLE_MEMORY_TRACKER
+
+    const int signal = Signal_ReceivedSignal();
+    return (signal != 0) ? 128 + signal : result;
 }
 

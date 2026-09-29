@@ -36,6 +36,11 @@ TEST(IntegrationTest_RunServer)
 TEST(IntegrationTest_ShutDownServer)
 {
     ASSERT(Subprocess_Kill(__serverPid));
+
+    // The server must flush its buffered events and exit on SIGTERM
+    // instead of being killed mid-shutdown.
+    i32 status = Subprocess_WaitFor(__serverPid, 5000);
+    ASSERT_NE(status, -1);
 }
 
 void registerIntegrationTests(void)

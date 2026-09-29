@@ -2,14 +2,18 @@
 #define WETMAN_UTILS_MEM_ARENA_H
 
 #include <stdlib.h>
+#include <wetman/utils/type.h>
 
 
 typedef struct __ArenaPageHeader __ArenaPageHeader;
 
-typedef struct Arena {
+typedef struct Arena Arena;
+
+struct Arena {
+    usize              __id;
     __ArenaPageHeader* __headPage;
     __ArenaPageHeader* __tailPage;
-} Arena;
+};
 
 Arena Arena_New(void);
 Arena Arena_WithPageCapacity(size_t capacity);
