@@ -3,4 +3,8 @@
 
 #include <wetman/utils/mem/arena.c>
 
+#ifdef WETMAN_ENABLE_MEMORY_TRACKER
+#include <wetman/utils/mem/memory_tracker.c>
+#endif
+
 #endif // WETMAN_UTILS_MEM_MOD_C
