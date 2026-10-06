@@ -1,5 +1,5 @@
-#ifndef WETMAN_CLIENT_ARGS_ARG_H
-#define WETMAN_CLIENT_ARGS_ARG_H
+#ifndef WETMAN_UTILS_ARGS_ARG_H
+#define WETMAN_UTILS_ARGS_ARG_H
 
 #include <wetman/utils/data_struct/str.h>
 #include <wetman/utils/type.h>
@@ -19,5 +19,4 @@ typedef struct {
     i32 initialized;
 } Arg;
 
-#endif // WETMAN_CLIENT_ARGS_ARG_H
-
+#endif // WETMAN_UTILS_ARGS_ARG_H

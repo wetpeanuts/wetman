@@ -1,11 +1,26 @@
 #include <wetman/client/commands/parser.h>
 
+#include <wetman/utils/args/parser.h>
 #include <wetman/utils/data_struct/str.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
+
+static int __CommandParser_MatchPrefix(const Command* cmd, int argc, char** argv)
+{
+    if ((usize)argc - 1 < cmd->prefix.len) {
+        return 0;
+    }
+
+    for (usize p = 0; p < cmd->prefix.len; ++p) {
+        if (!Str_EqCStr(cmd->prefix.data[p], argv[1 + p])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
 
 CommandParser CommandParser_New(void)
 {
@@ -29,85 +44,17 @@ Command* CommandParser_Parse(CommandParser* self, int argc, char** argv)
     for (u32 i = 0; i < self->__len; ++i) {
         Command* cmd = &self->__commands[i];
 
-        if ((usize)argc - 1 < cmd->prefix.len) {
+        if (!__CommandParser_MatchPrefix(cmd, argc, argv)) {
             continue;
         }
 
-        int matched = 1;
-        for (usize p = 0; p < cmd->prefix.len; ++p) {
-            if (!Str_EqCStr(cmd->prefix.data[p], argv[1 + p])) {
-                matched = 0;
-                break;
-            }
-        }
+        ArgsParser argsParser;
+        ArgsParser_Init(&argsParser, &cmd->args);
+        ArgsParser_Parse(&argsParser, argc, argv, 1 + (i32)cmd->prefix.len);
 
-        if (!matched) {
-            continue;
-        }
-
-        int argIndex = 1 + (int)cmd->prefix.len;
-
-        while (argIndex < argc) {
-            const char* token = argv[argIndex];
-            int found = 0;
-
-            for (u32 a = 0; a < cmd->args.len; ++a) {
-                Arg* arg = &cmd->args.args[a];
-
-                if (arg->position == ARG_POSITION_NONE &&
-                        (Str_EqCStr(arg->shortForm, token) ||
-                         Str_EqCStr(arg->fullForm, token))) {
-                    if (argIndex + 1 >= argc) {
-                        fprintf(stderr,
-                                "Missing value for option: %s\n",
-                                token);
-                        return NULL;
-                    }
-                    arg->value = Str_FromCStr(argv[argIndex + 1]);
-                    arg->initialized = TRUE;
-                    argIndex += 2;
-                    found = 1;
-                    break;
-                }
-            }
-
-            if (!found) {
-                if (token[0] == '-') {
-                    fprintf(stderr, "Unknown option: %s\n", token);
-                    return NULL;
-                }
-
-                Arg* target = NULL;
-                for (u32 a = 0; a < cmd->args.len; ++a) {
-                    Arg* arg = &cmd->args.args[a];
-                    if (arg->position >= 0 && !arg->initialized) {
-                        target = arg;
-                        break;
-                    }
-                }
-
-                if (target == NULL) {
-                    fprintf(stderr, "Unexpected argument: %s\n", token);
-                    return NULL;
-                }
-
-                target->value = Str_FromCStr(token);
-                target->initialized = TRUE;
-                argIndex += 1;
-            }
-        }
-
-        for (u32 a = 0; a < cmd->args.len; ++a) {
-            Arg* arg = &cmd->args.args[a];
-            if (arg->required && !arg->initialized) {
-                if (arg->position >= 0) {
-                    fprintf(stderr, "Missing required argument\n");
-                } else {
-                    fprintf(stderr, "Missing required option: %s\n",
-                            arg->fullForm.len > 0 ? arg->fullForm.data : arg->shortForm.data);
-                }
-                return NULL;
-            }
+        if (argsParser.status != ARGS_PARSE_STATUS_OK) {
+            ArgsParser_PrintError(stderr, &argsParser);
+            return NULL;
         }
 
         return cmd;

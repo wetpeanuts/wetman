@@ -4,7 +4,7 @@
 
 #include <wetman/utils/data_struct/slice_str.h>
 #include <wetman/utils/mem/arena.h>
-#include <wetman/client/args/args.h>
+#include <wetman/utils/args/args.h>
 
 
 typedef i32(*CommandHandler)(const Args* args, Arena* arena);
