@@ -3,6 +3,7 @@
 #include "it_healthcheck.c"
 #include "it_workspace.c"
 #include "it_task.c"
+#include "it_mem_out.c"
 
 // Tmp dir macros work only in the context of the test case,
 // so we need to wrap it into a separate test
@@ -48,6 +49,11 @@ void registerIntegrationTests(void)
     // Tests without running server
     REGISTER_TEST(IntegrationTest_HealthCheck_NoServerRunning);
     REGISTER_TEST(IntegrationTest_Workspace_NoServerRunning);
+
+    // Tests spawning their own short-lived server instance
+    REGISTER_TEST(IntegrationTest_MemOut_CreatesFileAndFlushesEvents);
+    REGISTER_TEST(IntegrationTest_MemOut_ExistingFileFails);
+    REGISTER_TEST(IntegrationTest_MemOut_InvalidArgs);
 
     // Tests required server instance running
     REGISTER_TEST(IntegrationTest_RunServer);

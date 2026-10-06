@@ -18,18 +18,58 @@
 #include <wetman/utils/proc/signal.h>
 
 #ifdef WETMAN_ENABLE_MEMORY_TRACKER
+#include <wetman/utils/args/parser.h>
 #include <wetman/utils/mem/memory_tracker.h>
+
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
 #endif // WETMAN_ENABLE_MEMORY_TRACKER
 
-int main(void)
+int main(int argc, char** argv)
 {
 #ifdef WETMAN_ENABLE_MEMORY_TRACKER
-    MemoryTracker_Init(STDOUT_FILENO);
+    Args memOutArgs = {
+        .len = 1,
+    };
+    memOutArgs.args[0] = (Arg) {
+        .shortForm    = Str_FromCStr("-m"),
+        .fullForm     = Str_FromCStr("--mem-out"),
+        .required     = FALSE,
+        .position     = ARG_POSITION_NONE,
+        .value        = Str_CreateEmpty(),
+        .initialized  = FALSE,
+    };
+
+    ArgsParser argsParser;
+    ArgsParser_Init(&argsParser, &memOutArgs);
+    ArgsParser_Parse(&argsParser, argc, argv, 1);
+    if (argsParser.status != ARGS_PARSE_STATUS_OK) {
+        ArgsParser_PrintError(stderr, &argsParser);
+        return 1;
+    }
+
+    i32 fdMemOut = STDOUT_FILENO;
+    if (memOutArgs.args[0].initialized) {
+        Str memOutPath = memOutArgs.args[0].value;
+        // Exclusive create: an existing file is an error, never overridden.
+        fdMemOut = FS_OpenFile(memOutPath, O_WRONLY | O_CREAT | O_EXCL);
+        if (fdMemOut < 0) {
+            fprintf(stderr, "error: cannot create memory output file '%.*s': %s\n",
+                    (i32)memOutPath.len, memOutPath.data, strerror(errno));
+            return 1;
+        }
+    }
+
+    MemoryTracker_Init(fdMemOut);
 
     // Ctrl+C sends SIGINT, Subprocess_Kill sends SIGTERM. Both request a
     // graceful shutdown so buffered events still get flushed.
     Signal_InstallShutdownHandler(SIGINT);
     Signal_InstallShutdownHandler(SIGTERM);
+#else
+    (void)argc;
+    (void)argv;
 #endif // WETMAN_ENABLE_MEMORY_TRACKER
 
     Arena arena = Arena_New();
