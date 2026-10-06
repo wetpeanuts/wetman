@@ -2,6 +2,7 @@
 
 #include "ut_data_stream.c"
 
+#include "args/mod.c"
 #include "async/mod.c"
 #include "data_struct/mod.c"
 #include "mem/mod.c"
@@ -29,6 +30,7 @@ void registerUtilTests(void)
     REGISTER_TEST(DataStreamTest_PushPop_SliceI64);
     REGISTER_TEST(DataStreamTest_PushPop_SliceI64_Empty);
 
+    registerUtilArgsTests();
     registerUtilAsyncTests();
     registerUtilDataStructTests();
     registerUtilMemTests();

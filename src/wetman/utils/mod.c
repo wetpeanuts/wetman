@@ -2,6 +2,7 @@
 #define WETMAN_UTILS_MOD_C
 
 #include <wetman/utils/async/mod.c>
+#include <wetman/utils/args/mod.c>
 #include <wetman/utils/data_struct/mod.c>
 #include <wetman/utils/mem/mod.c>
 #include <wetman/utils/net/mod.c>
