@@ -1,6 +1,8 @@
 #include <wetman/utils/proc/subprocess.h>
 #include <wetman/utils/test/macro.h>
 
+#include <wetman/utils/mem/memory_tracker_reader.h>
+
 #include "utils.h"
 
 #include <stdio.h>
@@ -66,6 +68,14 @@ TEST(IntegrationTest_MemOut_CreatesFileAndFlushesEvents)
     Str out = Str_FromCStr(buf);
     EXPECT(Str_Contains(out, Str_FromCStr("MemoryEvent")) >= 0);
     EXPECT(Str_Contains(out, Str_FromCStr("ARENA_CREATED")) >= 0);
+
+    // The whole dump must parse and every arena must be freed.
+    Arena verifyArena = Arena_New();
+    MemoryEventList list;
+    ASSERT_EQ(MemoryTrackerReader_ReadFromFile(
+            Str_FromCStr(memOutAbs), &verifyArena, &list), 0);
+    ASSERT(MemoryTrackerReader_VerifyAllArenasFreed(&list, &verifyArena));
+    Arena_Free(&verifyArena);
 }
 
 // The long form must be recognized: an existing file is an error

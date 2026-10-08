@@ -53,6 +53,11 @@ typedef struct {
 } MemoryEvent;
 
 typedef struct {
+    MemoryEvent* events;
+    usize        count;
+} MemoryEventList;
+
+typedef struct {
     MemoryEvent events[MEMORY_TRACKER_MAX_EVENT_COUNT];
     usize       eventCount;
     i32         fdOutput; // File descriptor to flush the events to
