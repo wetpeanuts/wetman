@@ -14,6 +14,7 @@
 #include <wetman/client/commands/task_edit.h>
 #include <wetman/client/commands/task_print.h>
 #include <wetman/client/commands/task_delete.h>
+#include <wetman/client/commands/task_run.h>
 
 #include <wetman/client/mod.c>
 
@@ -34,6 +35,7 @@ static void PrintUsage(FILE* out)
             "  task edit <id>           Edit task shell script\n"
             "  task print <id>          Print task shell script\n"
             "  task delete <id>         Delete a task\n"
+            "  task run <id>            Run a task and stream its output\n"
             "\n"
             "Options:\n"
             "  -n, --name <name>        Workspace name (default: current directory name)\n"
@@ -56,6 +58,7 @@ int main(int argc, char** argv)
     CommandParser_RegisterCommand(&parser, Command_TaskEdit_Create(&globalClientContext.arena));
     CommandParser_RegisterCommand(&parser, Command_TaskPrint_Create(&globalClientContext.arena));
     CommandParser_RegisterCommand(&parser, Command_TaskDelete_Create(&globalClientContext.arena));
+    CommandParser_RegisterCommand(&parser, Command_TaskRun_Create(&globalClientContext.arena));
 
     if (argc < 2 ||
             strcmp(argv[1], "-h") == 0 ||

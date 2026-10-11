@@ -9,5 +9,6 @@
 #define ENDPOINT_ID_TASK_GET         5
 #define ENDPOINT_ID_TASK_LIST        6
 #define ENDPOINT_ID_TASK_DELETE      7
+#define ENDPOINT_ID_TASK_RUN         8
 
 #endif // WETMAN_SHARED_ENDPOINT_ID_H

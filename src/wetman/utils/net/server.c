@@ -16,9 +16,11 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <signal.h>
 
 
 #define __SERVER_MAX_CONNECTION_QUEUE_LEN 16
@@ -43,6 +45,9 @@ int __Server_CreateSocket(const char* socketPath)
         perror("Failed to creare socket\n");
         exit(1);
     }
+
+    // Do not let forked children (e.g. task processes) inherit the listener.
+    fcntl(fdServer, F_SETFD, FD_CLOEXEC);
 
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
@@ -119,6 +124,14 @@ void __Server_DisconnectConn(__ClientConn* conn)
     for (usize i = 0; i < unreadFdCount; i++) {
         close(conn->requestFds.data[conn->requestFds.readPos + i].fd);
     }
+    // Close the response fds the server still owns. SCM_RIGHTS duplicated them
+    // into the client; the server's copies are released once the response has
+    // been sent (or the connection is torn down before it is).
+    const usize responseFdCount = FdStream_Count(&conn->responseMessage.fileDescriptors);
+    for (usize i = 0; i < responseFdCount; i++) {
+        close(conn->responseMessage.fileDescriptors
+                .data[conn->responseMessage.fileDescriptors.readPos + i].fd);
+    }
     if (Arena_IsValid(&conn->arena)) {
         Arena_Free(&conn->arena);
     }
@@ -143,6 +156,9 @@ void __Server_AcceptClient(__ServerMainContext* ctx)
         return;
     }
 
+    // Do not leak the client socket into forked children (task processes).
+    fcntl(fdClient, F_SETFD, FD_CLOEXEC);
+
     for (int i = 0; i < __SERVER_MAX_CLIENTS; i++) {
         if (ctx->conns[i].state == CONN_STATE_FREE) {
             __ClientConn* conn = &ctx->conns[i];
@@ -152,6 +168,7 @@ void __Server_AcceptClient(__ServerMainContext* ctx)
             conn->readLen    = 0;
             conn->readTarget = REQUEST_HEADER_SERIALIZED_LEN;
             conn->requestFds = FdStream_New();
+            conn->responseMessage = Message_New();
             conn->writeOffset = 0;
             conn->responseFdsSent = 1;
             conn->arena      = Arena_New();
@@ -387,6 +404,12 @@ void __Server_MainIter(Callback* callbackMeta)
         return;
     }
 
+    // Reap any finished child processes (task runs, ...) so they do not
+    // accumulate as zombies.
+    int childStatus;
+    while (waitpid(-1, &childStatus, WNOHANG) > 0) {
+    }
+
     struct pollfd pfds[1 + __SERVER_MAX_CLIENTS];
     int           connIndices[1 + __SERVER_MAX_CLIENTS];
     int           nfds = 0;
@@ -463,6 +486,10 @@ void __Server_MainIter(Callback* callbackMeta)
 
 int Server_Run(const char* socketPath, EndpointRegistry* endpointRegistry)
 {
+    // A client may disconnect mid-response; writing to the closed socket must
+    // not kill the whole server with SIGPIPE.
+    signal(SIGPIPE, SIG_IGN);
+
     int       fdServer = __Server_CreateSocket(socketPath);
     Arena     loopArena = Arena_New();
     EventLoop mainLoop = EventLoop_New();

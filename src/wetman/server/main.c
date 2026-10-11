@@ -12,6 +12,7 @@
 #include <wetman/server/endpoint/task_get.h>
 #include <wetman/server/endpoint/task_list.h>
 #include <wetman/server/endpoint/task_delete.h>
+#include <wetman/server/endpoint/task_run.h>
 
 #include <wetman/server/mod.c>
 
@@ -108,6 +109,8 @@ int main(int argc, char** argv)
             Endpoint_TaskList_Create());
     EndpointRegistry_RegisterEndpoint(&endpointRegistry,
             Endpoint_TaskDelete_Create());
+    EndpointRegistry_RegisterEndpoint(&endpointRegistry,
+            Endpoint_TaskRun_Create());
 
     i32 result = Server_Run("/tmp/wetman_server.sock", &endpointRegistry);
     ServerContext_Destroy();

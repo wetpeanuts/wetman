@@ -9,5 +9,6 @@
 #include <wetman/client/endpoint/task_get.c>
 #include <wetman/client/endpoint/task_list.c>
 #include <wetman/client/endpoint/task_delete.c>
+#include <wetman/client/endpoint/task_run.c>
 
 #endif // WETMAN_CLIENT_ENDPOINT_MOD_C

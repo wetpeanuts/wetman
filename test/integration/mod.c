@@ -101,6 +101,7 @@ void registerIntegrationTests(void)
     REGISTER_TEST(IntegrationTest_Task_Edit);
     REGISTER_TEST(IntegrationTest_Task_Print);
     REGISTER_TEST(IntegrationTest_Task_Delete);
+    REGISTER_TEST(IntegrationTest_Task_Run);
 
     REGISTER_TEST(IntegrationTest_ShutDownServer);
 }

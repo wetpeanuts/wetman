@@ -429,3 +429,67 @@ TEST(IntegrationTest_Task_Delete)
         ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("deleted")) >= 0);
     }
 }
+
+TEST(IntegrationTest_Task_Run)
+{
+    char parent[256];
+    CREATE_TMP_DIR(parent);
+
+    char projPath[512];
+    ASSERT_EQ(CreateProjectDir(parent, "projRun", projPath, sizeof(projPath)), 0);
+
+    char outInit[512];
+    snprintf(outInit, sizeof(outInit), "%s/init.txt", parent);
+    char outNew[512];
+    snprintf(outNew, sizeof(outNew), "%s/new.txt", parent);
+    char outRun[512];
+    snprintf(outRun, sizeof(outRun), "%s/run.txt", parent);
+    char outRunMiss[512];
+    snprintf(outRunMiss, sizeof(outRunMiss), "%s/run_miss.txt", parent);
+
+    usize workspaceId = 0;
+    EXPECT_EQ(RunWetman(projPath, "workspace init", outInit), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outInit, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseInitId(buf, &workspaceId), 0);
+    }
+
+    usize taskId = 0;
+    EXPECT_EQ(RunWetman(projPath, "task new run_task", outNew), 0);
+    {
+        char buf[256];
+        ASSERT_EQ(ReadFile(outNew, buf, sizeof(buf)), 0);
+        ASSERT_EQ(ParseTaskId(buf, &taskId), 0);
+    }
+
+    // The default task.sh echoes a canned description; running the task must
+    // stream that output back to the client over the passed pipe fd.
+    EXPECT_EQ(RunWetman(projPath, "task run 0", outRun), 0);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outRun, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Uninitialized task")) >= 0);
+    }
+
+    char runNamedCmd[256];
+    snprintf(runNamedCmd, sizeof(runNamedCmd),
+            "task run -w %llu %llu",
+            (unsigned long long)workspaceId,
+            (unsigned long long)taskId);
+    char outRunNamed[512];
+    snprintf(outRunNamed, sizeof(outRunNamed), "%s/run_named.txt", parent);
+    EXPECT_EQ(RunWetman(NULL, runNamedCmd, outRunNamed), 0);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outRunNamed, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("Uninitialized task")) >= 0);
+    }
+
+    EXPECT_EQ(RunWetman(projPath, "task run 99999", outRunMiss), 4);
+    {
+        char buf[8192];
+        ASSERT_EQ(ReadFile(outRunMiss, buf, sizeof(buf)), 0);
+        ASSERT(Str_Contains(Str_FromCStr(buf), Str_FromCStr("status code: 4")) >= 0);
+    }
+}

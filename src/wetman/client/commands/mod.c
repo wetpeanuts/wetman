@@ -13,5 +13,6 @@
 #include <wetman/client/commands/task_edit.c>
 #include <wetman/client/commands/task_print.c>
 #include <wetman/client/commands/task_delete.c>
+#include <wetman/client/commands/task_run.c>
 
 #endif // WETMAN_CLIENT_COMMANDS_MOD_C

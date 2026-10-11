@@ -48,7 +48,12 @@ that transitively `#include` every `.c` file (guarded by `WETMAN_*_MOD_C`).
   register in `main.c`. Deleting a task (`task delete
   [-w|--workspace <id>] <taskId>`) calls the `task_delete` endpoint, which
   removes the task directory `<workspace>/tasks/<taskId>` on the server
-  (task ids stay monotonic — `nextTaskId` is not rewound).
+  (task ids stay monotonic — `nextTaskId` is not rewound). Running a task
+  (`task run [-w|--workspace <id>] <taskId>`) calls the `task_run` endpoint:
+  the server `fork`s the task (`sh <taskDir>/task.sh`, cwd = the project
+  workspace path) with stdout/stderr on a pipe and returns the pipe's read end
+  to the client via SCM_RIGHTS; the client streams it until EOF. The server
+  reaps finished children each poll iteration.
 - Request/response structs (except stateless ones) allocate any resources they
   own (slices, strings) into the `Arena*` passed to the shared inline
   deserializers `Endpoint_<Name>_RequestDeserializer(req, Message*, Arena*)` /
